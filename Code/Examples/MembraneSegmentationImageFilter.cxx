@@ -79,7 +79,6 @@ int main ( int argc, char* argv[] )
   typedef itk::ImageRegionIterator< FeatureImageType > FeatureIteratorType;
   typedef itk::ImageRegionIterator< SegmentImageType > SegmentIteratorType;
 
-  double m_LargestCellRadius = 8.0;
   double m_Alpha = 1.0;
   double m_ThresholdMin = atof( argv[4] );
 

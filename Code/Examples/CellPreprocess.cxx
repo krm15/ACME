@@ -60,7 +60,6 @@ int main ( int argc, char* argv[] )
   FilterType;
 
   double sigma = 1.0;
-  int DataType = 0;
 
   if (argc > 3)
   {

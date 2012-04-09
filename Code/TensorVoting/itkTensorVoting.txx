@@ -80,11 +80,11 @@ TensorVoting< TInputImage >
 template< class TInputImage >
 void
 TensorVoting< TInputImage >
-::ComputeOrientedField( double saliency, PointType& iCenter, 
+::ComputeOrientedField( double saliency, PointType& iCenter,
   MatrixType& R, unsigned int i, int threadId )
 {
   // Generate local field
-  OrientedTensorGeneratorPointer orientedTensor = 
+  OrientedTensorGeneratorPointer orientedTensor =
     OrientedTensorGeneratorType::New();
   orientedTensor->SetInput( m_VotingField[i] );
   orientedTensor->SetCenter( iCenter );
@@ -128,7 +128,7 @@ TensorVoting< TInputImage >
 template< class TInputImage >
 void
 TensorVoting< TInputImage >
-::OverlapRegion( ImagePointer A, ImagePointer B, 
+::OverlapRegion( ImagePointer A, ImagePointer B,
   RegionType& rA, RegionType& rB )
 {
   SizeType sizeA, sizeB, s;
@@ -160,7 +160,7 @@ TensorVoting< TInputImage >
       sIndexB[i] = 0;
       sIndexA[i] = tIndexA[i];
       s[i] = sizeB[i];
-      if ( s[i] > static_cast< SizeValueType >( 
+      if ( s[i] > static_cast< SizeValueType >(
         sizeA[i] - sIndexA[i] - 1 ) )
       {
         s[i] = sizeA[i] - sIndexA[i];
@@ -223,7 +223,7 @@ TensorVoting< TInputImage >
   }
 
   m_ThreadImage.resize( this->GetNumberOfThreads() );
-  for( int i = 0; i < this->GetNumberOfThreads(); i++ )
+  for( unsigned int i = 0; i < this->GetNumberOfThreads(); i++ )
   {
     m_ThreadImage[i] = 0;
   }
@@ -235,7 +235,7 @@ void
 TensorVoting< TInputImage >
 ::AfterThreadedGenerateData()
 {
-  for( int i = 0; i < this->GetNumberOfThreads(); i++ )
+  for( unsigned int i = 0; i < this->GetNumberOfThreads(); i++ )
   {
     if ( m_ThreadImage[i] )
     {
@@ -248,14 +248,14 @@ TensorVoting< TInputImage >
 template< class TInputImage >
 void
 TensorVoting< TInputImage >
-::PadImage(const OutputImageRegionType& windowRegion, 
+::PadImage(const OutputImageRegionType& windowRegion,
   int threadId)
 {
   IndexType start = windowRegion.GetIndex();
   SizeType size = windowRegion.GetSize();
   SpacingType spacing = this->GetInput()->GetSpacing();
 
-  double radius = vcl_floor( vcl_sqrt( -vcl_log(0.01) * 
+  double radius = vcl_floor( vcl_sqrt( -vcl_log(0.01) *
     m_Sigma*m_Sigma ) );
 
   SizeValueType rad;
@@ -294,7 +294,7 @@ TensorVoting< TInputImage >
 template< class TInputImage >
 void
 TensorVoting< TInputImage >
-::ThreadedGenerateData(const OutputImageRegionType& windowRegion, 
+::ThreadedGenerateData(const OutputImageRegionType& windowRegion,
   ThreadIdType threadId)
 {
   PadImage(windowRegion, threadId);
