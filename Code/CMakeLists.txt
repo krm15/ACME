@@ -1,4 +1,4 @@
-PROJECT( MembraneReconstruction )
+PROJECT( ACME )
 
 # CMake >= 2.6 MUST be installed
 CMAKE_MINIMUM_REQUIRED( VERSION 2.6 )
