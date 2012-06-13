@@ -1,14 +1,14 @@
 INCLUDE_DIRECTORIES( BEFORE
-  ${MembraneReconstruction_SOURCE_DIR}/CellPreprocess
-  ${MembraneReconstruction_BINARY_DIR}/CellPreprocess
-  ${MembraneReconstruction_SOURCE_DIR}/PlanarityFilter
-  ${MembraneReconstruction_BINARY_DIR}/PlanarityFilter
-  ${MembraneReconstruction_SOURCE_DIR}/TensorVoting
-  ${MembraneReconstruction_BINARY_DIR}/TensorVoting
-  ${MembraneReconstruction_SOURCE_DIR}/ConfocalImageGenerator
-  ${MembraneReconstruction_BINARY_DIR}/ConfocalImageGenerator
-  ${MembraneReconstruction_SOURCE_DIR}/WatershedImageFilter
-  ${MembraneReconstruction_BINARY_DIR}/WatershedImageFilter
+  ${ACME_SOURCE_DIR}/CellPreprocess
+  ${ACME_BINARY_DIR}/CellPreprocess
+  ${ACME_SOURCE_DIR}/PlanarityFilter
+  ${ACME_BINARY_DIR}/PlanarityFilter
+  ${ACME_SOURCE_DIR}/TensorVoting
+  ${ACME_BINARY_DIR}/TensorVoting
+  ${ACME_SOURCE_DIR}/ConfocalImageGenerator
+  ${ACME_BINARY_DIR}/ConfocalImageGenerator
+  ${ACME_SOURCE_DIR}/WatershedImageFilter
+  ${ACME_BINARY_DIR}/WatershedImageFilter
 )
 
 ADD_EXECUTABLE(cellPreprocess CellPreprocess.cxx)

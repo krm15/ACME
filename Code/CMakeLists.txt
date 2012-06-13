@@ -53,16 +53,16 @@ ENDIF(ITK_FOUND)
 # Define
 
 SET( CMAKE_RUNTIME_OUTPUT_DIRECTORY
- ${MembraneReconstruction_BINARY_DIR}/bin
+ ${ACME_BINARY_DIR}/bin
  CACHE PATH "Single output directory for building all executables."
 )
 
 SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY
- ${MembraneReconstruction_BINARY_DIR}/lib
+ ${ACME_BINARY_DIR}/lib
  CACHE PATH "Single output directory for building all libraries."
 )
 
-ADD_LIBRARY( Random ${MembraneReconstruction_SOURCE_DIR}/Code/ConfocalImageGenerator/itkThreadSafeMersenneTwisterRandomVariateGenerator.cxx )
+ADD_LIBRARY( Random ${ACME_SOURCE_DIR}/ConfocalImageGenerator/itkThreadSafeMersenneTwisterRandomVariateGenerator.cxx )
 
 SET( DIRECTORIES
   CellPreprocess
