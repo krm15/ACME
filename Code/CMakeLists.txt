@@ -62,7 +62,7 @@ SET( CMAKE_ARCHIVE_OUTPUT_DIRECTORY
  CACHE PATH "Single output directory for building all libraries."
 )
 
-ADD_LIBRARY( Random ${MembraneReconstruction_SOURCE_DIR}/ConfocalImageGenerator/itkThreadSafeMersenneTwisterRandomVariateGenerator.cxx )
+ADD_LIBRARY( Random ${MembraneReconstruction_SOURCE_DIR}/Code/ConfocalImageGenerator/itkThreadSafeMersenneTwisterRandomVariateGenerator.cxx )
 
 SET( DIRECTORIES
   CellPreprocess
