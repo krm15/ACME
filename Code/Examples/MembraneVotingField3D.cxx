@@ -45,6 +45,7 @@
 #include "itkTensorToSaliencyImageFilter.h"
 #include "itkImageRegionIterator.h"
 #include "itkVectorIndexSelectionCastImageFilter.h"
+#include "itkRescaleIntensityImageFilter.h"
 
 int main ( int argc, char* argv[] )
 {
@@ -57,6 +58,7 @@ int main ( int argc, char* argv[] )
   }
 
   const unsigned int Dimension = 3;
+  typedef itk::Image< unsigned char, Dimension >   FeatureImageType;
   typedef itk::Image< double, Dimension > InputImageType;
   typedef itk::ImageFileReader< InputImageType > ReaderType;
   typedef itk::ImageRegionIterator< InputImageType > InputIteratorType;
@@ -70,8 +72,9 @@ int main ( int argc, char* argv[] )
   typedef itk::Vector< double, Dimension > VectorType;
   typedef itk::Image< VectorType, Dimension > VectorImageType;
   typedef itk::TensorToSaliencyImageFilter< ImageType, VectorImageType > SaliencyFilterType;
-  typedef itk::ImageFileWriter< InputImageType > WriterType;
+  typedef itk::ImageFileWriter< FeatureImageType > WriterType;
   typedef itk::VectorIndexSelectionCastImageFilter< VectorImageType, InputImageType > IndexFilterType;
+  typedef itk::RescaleIntensityImageFilter< InputImageType, FeatureImageType > RescaleFilterType;
 
   InputImageType::Pointer planarity;
   {
@@ -141,9 +144,15 @@ int main ( int argc, char* argv[] )
   componentExtractor->SetIndex( 2 );
   std::cout << "Saliency complete..." << std::endl;
 
+  RescaleFilterType::Pointer rescale = RescaleFilterType::New();
+  rescale->SetInput( componentExtractor->GetOutput() );
+  rescale->SetOutputMinimum( 0 );
+  rescale->SetOutputMaximum( 255 );
+  rescale->Update();
+
   // Write the output
   WriterType::Pointer writer = WriterType::New();
-  writer->SetInput ( componentExtractor->GetOutput() );
+  writer->SetInput ( rescale->GetOutput() );
   writer->SetFileName ( argv[3] );
 
   try

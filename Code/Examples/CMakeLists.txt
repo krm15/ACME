@@ -32,3 +32,6 @@ TARGET_LINK_LIBRARIES( membraneSegmentation ${ITK_LIBRARIES})
 ADD_EXECUTABLE(cvtGenerator CVTGenerator.cxx)
 TARGET_LINK_LIBRARIES(cvtGenerator ${ITK_LIBRARIES} Random )
 
+ADD_EXECUTABLE(membraneSegmentationEvaluation MembraneSegmentationEvaluation.cxx)
+TARGET_LINK_LIBRARIES(membraneSegmentationEvaluation ${ITK_LIBRARIES} )
+

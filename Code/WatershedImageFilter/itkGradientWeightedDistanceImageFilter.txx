@@ -50,8 +50,7 @@ template< class TFeatureImage,class TInputImage,class TSegmentImage >
 GradientWeightedDistanceImageFilter< TFeatureImage, TInputImage, TSegmentImage >
 ::GradientWeightedDistanceImageFilter()
 {
-  m_UseLevelSet = true;
-  m_LargestCellRadius = 5.0;
+  m_LargestCellRadius = 8.0;
   m_NucleiSigma = 0.4;
   m_Alpha = 1;
 
@@ -76,35 +75,20 @@ GradientWeightedDistanceImageFilter< TFeatureImage, TInputImage, TSegmentImage >
   m_Maurer->SetUseImageSpacing ( 1 );
   m_Maurer->SetInsideIsPositive ( 0 );
   m_Maurer->Update();
-
-  ImagePointer image;
-  if ( m_UseLevelSet )
-    {
-    // Nuclei only -- for use with level-set algorithms
-    AbsFilterPointer  m_absFilter = AbsFilterType::New();
-    m_absFilter->SetInput ( m_Maurer->GetOutput() );
-    m_absFilter->Update();
-    image = m_absFilter->GetOutput();
-    image->DisconnectPipeline();
-    }
-  else
-    {
-      // Membranes only
-      image = m_Maurer->GetOutput();
-      image->DisconnectPipeline();
-    }
+  ImagePointer image = m_Maurer->GetOutput();
+  image->DisconnectPipeline();
 
   IteratorType It( image, image->GetLargestPossibleRegion() );
   It.GoToBegin();
   while( !It.IsAtEnd() )
     {
-    // Set pixels on or inside the membrane to 0
-    if ( ( !m_UseLevelSet ) && ( It.Get() < 0 ) )
+    // Set pixels on or outside the membrane to 0
+    if ( It.Get() < 0 )
       {
       It.Set( 0 );
       }
 
-    if ( vcl_abs( It.Get() ) > m_LargestCellRadius )
+    if ( It.Get() > m_LargestCellRadius )
       {
       It.Set( m_LargestCellRadius );
       }

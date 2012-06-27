@@ -22,8 +22,6 @@
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
 
-#include "itkRescaleIntensityImageFilter.h"
-
 int main(int argc, char* argv [] )
 {
   if ( argc < 4 )
@@ -35,9 +33,9 @@ int main(int argc, char* argv [] )
 
 
   // Define the dimension of the images
-  const unsigned int Dimension = 3;
-  typedef short      InputPixelType;
-  typedef double     OutputPixelType;
+  const unsigned int    Dimension = 3;
+  typedef unsigned char InputPixelType;
+  typedef double        OutputPixelType;
 
   // Declare the types of the images
   typedef itk::Image< InputPixelType, Dimension > InputImageType;
