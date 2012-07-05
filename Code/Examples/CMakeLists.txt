@@ -35,3 +35,5 @@ TARGET_LINK_LIBRARIES(cvtGenerator ${ITK_LIBRARIES} Random )
 ADD_EXECUTABLE(membraneSegmentationEvaluation MembraneSegmentationEvaluation.cxx)
 TARGET_LINK_LIBRARIES(membraneSegmentationEvaluation ${ITK_LIBRARIES} )
 
+ADD_EXECUTABLE(labelMapOverlapMeasures LabelMapOverlapMeasures.cxx)
+TARGET_LINK_LIBRARIES(labelMapOverlapMeasures ${ITK_LIBRARIES} )

@@ -43,7 +43,7 @@
 #include "itkBinaryThresholdImageFilter.h"
 #include "itkGradientWeightedDistanceImageFilter.h"
 #include "itkInvertIntensityImageFilter.h"
-#include "itkMorphologicalWatershedImageFilter.h"
+#include "itkMorphologicalWatershedImageFilter2.h"
 #include "itkLabelOverlayImageFilter.h"
 #include "itkImageFileWriter.h"
 #include "itkImageRegionIterator.h"
@@ -57,10 +57,10 @@
 
 int main ( int argc, char* argv[] )
 {
-  if ( argc < 8 )
+  if ( argc < 9 )
     {
     std::cerr << "Usage: " << std::endl;
-    std::cerr << argv[0] << " iMembraneImg oSegmentImg <opt> alpha sigma omega threshold" << std::endl;
+    std::cerr << argv[0] << " iMembraneImg iFgImg oSegmentImg <opt> alpha sigma omega threshold" << std::endl;
     return EXIT_FAILURE;
     }
 
@@ -93,7 +93,8 @@ int main ( int argc, char* argv[] )
 
   typedef itk::InvertIntensityImageFilter< InputImageType, InputImageType > RInvertType;
 
-  typedef itk::MorphologicalWatershedImageFilter< InputImageType, SegmentImageType > WatershedFilterType;
+  typedef itk::MorphologicalWatershedImageFilter2< InputImageType, SegmentImageType > WatershedFilterType;
+
   typedef itk::RescaleIntensityImageFilter< InputImageType, FeatureImageType > RescaleFilterType;
 
   typedef itk::ShapeRelabelImageFilter< SegmentImageType > RelabelFilterType;
@@ -101,11 +102,11 @@ int main ( int argc, char* argv[] )
   typedef itk::ImageRegionIterator< InputImageType > InputIteratorType;
   typedef itk::ImageRegionIterator< SegmentImageType > SegmentIteratorType;
 
-  int opt = atof( argv[3] );
-  double m_Alpha = atof( argv[4] );
-  double sigma = atof( argv[5] );
-  double omega = atof( argv[6] );
-  double m_ThresholdMin = atof( argv[7] );
+  int opt = atof( argv[4] );
+  double m_Alpha = atof( argv[5] );
+  double sigma = atof( argv[6] );
+  double omega = atof( argv[7] );
+  double m_ThresholdMin = atof( argv[8] );
 
   // Read in the raw image
   FeatureReaderType::Pointer raw = FeatureReaderType::New();
@@ -195,6 +196,12 @@ int main ( int argc, char* argv[] )
     }
   }
 
+  SegmentReaderType::Pointer reader = SegmentReaderType::New();
+  reader->SetFileName ( argv[2] );
+  reader->Update();
+  SegmentImageType::Pointer m_FgImg = reader->GetOutput();
+  m_FgImg->DisconnectPipeline();
+
   SegmentImageType::Pointer m_ForegroundImg = SegmentImageType::New();
   m_ForegroundImg->CopyInformation( input );
   m_ForegroundImg->SetRegions( input->GetLargestPossibleRegion() );
@@ -202,21 +209,30 @@ int main ( int argc, char* argv[] )
   m_ForegroundImg->FillBuffer( 0 );
 
   SegmentIteratorType fIt ( m_ForegroundImg, m_ForegroundImg->GetLargestPossibleRegion() );
+  SegmentIteratorType tIt ( m_FgImg, m_FgImg->GetLargestPossibleRegion() );
   FeatureIteratorType sIt ( input, input->GetLargestPossibleRegion() );
 
   fIt.GoToBegin();
+  tIt.GoToBegin();
   sIt.GoToBegin();
-  while ( !fIt.IsAtEnd() )
-  {
-    if ( sIt.Get() > m_ThresholdMin )
+  while ( !tIt.IsAtEnd() )
     {
-      fIt.Set ( 1 );
-    }
-    else
-    {
-      fIt.Set ( 0 );
-    }
-
+    if ( tIt.Get() > 0 )
+      {
+      if ( sIt.Get() > m_ThresholdMin )
+        {
+        fIt.Set ( 1 );
+        }
+      else
+        {
+        fIt.Set ( 0 );
+        }
+      }
+      else
+      {
+      fIt.Set( 1 );
+      }
+    ++tIt;
     ++sIt;
     ++fIt;
   }
@@ -242,6 +258,7 @@ int main ( int argc, char* argv[] )
   wshed->SetLevel( 1.0 );
   wshed->FullyConnectedOn();
   wshed->SetNumberOfThreads( 12 );
+  wshed->SetForegroundImage( m_FgImg );
   wshed->Update();
   SegmentImageType::Pointer output = wshed->GetOutput();
   output->DisconnectPipeline();
@@ -256,7 +273,7 @@ int main ( int argc, char* argv[] )
   typedef itk::ImageFileWriter< SegmentImageType > WriterType;
   WriterType::Pointer writer = WriterType::New();
   writer->SetInput( relabel->GetOutput() );
-  writer->SetFileName( argv[2] );
+  writer->SetFileName( argv[3] );
   writer->SetUseCompression( true );
   writer->Update();
   std::cout << "Writing complete" << std::endl;
