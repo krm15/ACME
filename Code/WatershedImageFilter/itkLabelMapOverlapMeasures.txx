@@ -190,8 +190,8 @@ AssignMatchingLabels()
       if ( ( m_GroundTruthLabels.find(r) == m_GroundTruthLabels.end() ) &&
         ( m_SegLabels.find(c) == m_SegLabels.end() ) )
       {
-        m_AverageValueOfDiceMetric += loc->first;
-        m_AverageValueOfL2Metric += EvaluateHaussdorf(r,c);
+        //m_AverageValueOfDiceMetric += loc->first;
+        //m_AverageValueOfL2Metric += EvaluateHaussdorf(r,c);
         m_GroundTruthLabels[r] = c;
         m_SegLabels[c] = r;
       }
@@ -199,8 +199,8 @@ AssignMatchingLabels()
     while(loc != m_Dice.begin() );
   }
   m_NumberOfMatches = m_SegLabels.size();
-  m_AverageValueOfDiceMetric /= m_NumberOfMatches;
-  m_AverageValueOfL2Metric /= m_NumberOfMatches;
+  //m_AverageValueOfDiceMetric /= m_NumberOfMatches;
+  //m_AverageValueOfL2Metric /= m_NumberOfMatches;
 }
 
 

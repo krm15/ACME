@@ -28,7 +28,7 @@
 namespace itk
 {
 /**\class MultiscaleStructMeasureImageFilter
- * \brief A filter to enhance 3D vascular structures using Hessian
+ * \brief A filter to enhance 3D membrane structures using Hessian
  *         eigensystem in a multiscale framework
  *
  * The plate measure is based on the analysis of the the Hessian

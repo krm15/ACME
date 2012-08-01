@@ -84,11 +84,13 @@ int main ( int argc, char* argv[] )
   filter->SetThresholdForUndersegmentation( m_ThresholdForUndersegmentation );
   filter->Update();
 
-  std::cout << filter->GetNumberOfMatches() << ' ';
-  std::cout << filter->GetNumberOfOverSegmentations() << ' ';
-  std::cout << filter->GetNumberOfUnderSegmentations() << ' ';
-  std::cout << filter->GetAverageValueOfDiceMetric() << ' ';
-  std::cout << filter->GetAverageValueOfL2Metric() << std::endl;
+  std::cout << double(filter->GetNumberOfMatches())/filter->GetNumberOfGroundTruthLabels() << ' ';
+  std::cout << double(filter->GetNumberOfMatches())/filter->GetNumberOfSegLabels() << std::endl;
+
+//  std::cout << filter->GetNumberOfOverSegmentations() << ' ';
+//  std::cout << filter->GetNumberOfUnderSegmentations() << ' ';
+//  std::cout << filter->GetAverageValueOfDiceMetric() << ' ';
+//  std::cout << filter->GetAverageValueOfL2Metric() << std::endl;
 
   return EXIT_SUCCESS;
   }

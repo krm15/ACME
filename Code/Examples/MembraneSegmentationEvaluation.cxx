@@ -114,6 +114,7 @@ int main ( int argc, char* argv[] )
   raw->Update();
   FeatureImageType::Pointer input = raw->GetOutput();
   input->DisconnectPipeline();
+  std::cout << "Read input image..." << std::endl;
 
   if (opt >= 2)
   {
@@ -228,7 +229,7 @@ int main ( int argc, char* argv[] )
         fIt.Set ( 0 );
         }
       }
-      else
+    else
       {
       fIt.Set( 1 );
       }
@@ -236,6 +237,7 @@ int main ( int argc, char* argv[] )
     ++sIt;
     ++fIt;
   }
+  std::cout << "Computed foreground" << std::endl;
 
   DistanceFilterType::Pointer distFilter = DistanceFilterType::New();
   distFilter->SetInput ( raw->GetOutput() );

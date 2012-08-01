@@ -17,6 +17,9 @@ TARGET_LINK_LIBRARIES(cellPreprocess ${ITK_LIBRARIES})
 ADD_EXECUTABLE(resample Resample.cxx)
 TARGET_LINK_LIBRARIES(resample ${ITK_LIBRARIES})
 
+ADD_EXECUTABLE(membraneOrientationBasedHessianCalculator MembraneOrientationBasedHessianCalculator.cxx)
+TARGET_LINK_LIBRARIES(membraneOrientationBasedHessianCalculator ${ITK_LIBRARIES})
+
 ADD_EXECUTABLE(multiscalePlateMeasureImageFilter MultiscalePlateMeasureImageFilter.cxx)
 TARGET_LINK_LIBRARIES(multiscalePlateMeasureImageFilter ${ITK_LIBRARIES})
 
@@ -32,8 +35,10 @@ TARGET_LINK_LIBRARIES( membraneSegmentation ${ITK_LIBRARIES})
 ADD_EXECUTABLE(cvtGenerator CVTGenerator.cxx)
 TARGET_LINK_LIBRARIES(cvtGenerator ${ITK_LIBRARIES} Random )
 
+# For comparing the three segmentation versions
 ADD_EXECUTABLE(membraneSegmentationEvaluation MembraneSegmentationEvaluation.cxx)
 TARGET_LINK_LIBRARIES(membraneSegmentationEvaluation ${ITK_LIBRARIES} )
 
+# For computing the tables in the paper
 ADD_EXECUTABLE(labelMapOverlapMeasures LabelMapOverlapMeasures.cxx)
 TARGET_LINK_LIBRARIES(labelMapOverlapMeasures ${ITK_LIBRARIES} )

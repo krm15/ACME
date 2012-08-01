@@ -121,6 +121,10 @@ public:
 
   itkGetMacro( NumberOfMatches, unsigned int );
   itkSetMacro( NumberOfMatches, unsigned int );
+  itkGetMacro( NumberOfSegLabels, unsigned int );
+  itkSetMacro( NumberOfSegLabels, unsigned int );
+  itkGetMacro( NumberOfGroundTruthLabels, unsigned int );
+  itkSetMacro( NumberOfGroundTruthLabels, unsigned int );
   itkGetMacro( NumberOfOverSegmentations, unsigned int );
   itkSetMacro( NumberOfOverSegmentations, unsigned int );
   itkGetMacro( NumberOfUnderSegmentations, unsigned int );
