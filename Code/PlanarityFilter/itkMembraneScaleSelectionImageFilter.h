@@ -73,8 +73,7 @@ public:
   typedef typename OutputImageType::Pointer     OutputImagePointer;
 
   /** Image dimension = 3. */
-  itkStaticConstMacro( ImageDimension,
-    unsigned int, ::itk::GetImageDimension<ImageType>::ImageDimension);
+  itkStaticConstMacro( ImageDimension, unsigned int, ImageType::ImageDimension);
 
   itkStaticConstMacro(PixelDimension, unsigned int,
     PixelType::Dimension);

@@ -79,8 +79,7 @@ public:
   typedef typename OutputImageType::RegionType OutputRegionType;
 
   /** Image dimension = 3. */
-  itkStaticConstMacro(ImageDimension, unsigned int,
-                   ::itk::GetImageDimension<InputImageType>::ImageDimension);
+  itkStaticConstMacro(ImageDimension, unsigned int, InputImageType::ImageDimension);
 
   /** Update image buffer that holds the best vesselness response */
   typedef HessianRecursiveGaussianImageFilter< InputImageType > HessianFilterType;

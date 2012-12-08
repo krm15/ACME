@@ -70,7 +70,7 @@ public:
   typedef typename InputImageType::PixelType   InputPixelType;
   typedef typename InputImageType::RegionType  InputRegionType;
   typedef typename Superclass::OutputImageType OutputImageType;
-  typedef typename Superclass::OutputImageRegionType 
+  typedef typename Superclass::OutputImageRegionType
     OutputImageRegionType;
   typedef typename OutputImageType::Pointer    OutputImagePointer;
   typedef TPixel                               OutputPixelType;
@@ -78,7 +78,7 @@ public:
 
   /** Image dimension = 3. */
   itkStaticConstMacro( ImageDimension,
-    unsigned int, ::itk::GetImageDimension<InputImageType>::ImageDimension);
+    unsigned int, InputImageType::ImageDimension);
 
   itkStaticConstMacro(InputPixelDimension, unsigned int,
     InputPixelType::Dimension);
@@ -120,7 +120,7 @@ public:
       largest eigenvalue or not */
   itkSetMacro( ScaleMembranenessMeasure, bool );
   itkGetMacro( ScaleMembranenessMeasure, bool );
-	itkSetMacro( StructureIsPositive, bool );
+    itkSetMacro( StructureIsPositive, bool );
   itkGetMacro( StructureIsPositive, bool );
   itkSetMacro( ComputeEigenVectors, bool );
   itkGetMacro( ComputeEigenVectors, bool );
@@ -176,7 +176,7 @@ private:
   double m_Gamma;
   double m_C;
   bool   m_ScaleMembranenessMeasure;
-	bool   m_StructureIsPositive;
+    bool   m_StructureIsPositive;
   bool   m_ComputeEigenVectors;
   unsigned char m_ObjectType;
 };
