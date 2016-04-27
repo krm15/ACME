@@ -44,8 +44,7 @@ void
 TensorWithOrientation<TInputImage, TOutputImage>
 ::GenerateData(void)
 {
-	ImageConstPointer votingField = this->GetInput();
-	RegionType region =  this->GetInput()->GetLargestPossibleRegion();
+  ImageConstPointer votingField = this->GetInput();
   PointType origin = votingField->GetOrigin();
 
   this->GetOutput()->SetOrigin( origin );

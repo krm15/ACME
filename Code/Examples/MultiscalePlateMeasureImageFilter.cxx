@@ -27,7 +27,7 @@ int main(int argc, char* argv [] )
   if ( argc < 4 )
     {
     std::cerr << "Usage: " << std::endl;
-    std::cerr << argv[0] << " InputImage PlanarityOutputImage eigenMatrixOutput sigma" << std::endl;
+    std::cerr << argv[0] << " iInputImage oPlanarityImage oEigenMatrixImage iSigma" << std::endl;
     return EXIT_FAILURE;
     }
 

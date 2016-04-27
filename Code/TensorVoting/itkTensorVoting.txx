@@ -83,17 +83,20 @@ TensorVoting< TInputImage >
 ::ComputeOrientedField( double saliency, PointType& iCenter,
   MatrixType& R, unsigned int i, int threadId )
 {
-  // Generate local field
-  OrientedTensorGeneratorPointer orientedTensor =
-    OrientedTensorGeneratorType::New();
-  orientedTensor->SetInput( m_VotingField[i] );
-  orientedTensor->SetCenter( iCenter );
-  orientedTensor->SetRotationMatrix( R );
-  orientedTensor->SetOutputSpacing( m_Output->GetSpacing() );
-  orientedTensor->SetOutputRegion( m_Region );
-  orientedTensor->Update();
+    if (i == 2)
+        std::cout << "Yahoo" << std::endl;
 
-  ComputeVote( orientedTensor->GetOutput(), saliency, threadId );
+  // Generate local field
+//  OrientedTensorGeneratorPointer orientedTensor =
+//    OrientedTensorGeneratorType::New();
+//  orientedTensor->SetInput( m_VotingField[i] );
+//  orientedTensor->SetCenter( iCenter );
+//  orientedTensor->SetRotationMatrix( R );
+//  orientedTensor->SetOutputSpacing( m_Output->GetSpacing() );
+//  orientedTensor->SetOutputRegion( m_Region );
+//  orientedTensor->Update();
+//
+//  ComputeVote( orientedTensor->GetOutput(), saliency, threadId );
 }
 
 

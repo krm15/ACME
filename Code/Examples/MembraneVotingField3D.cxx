@@ -96,7 +96,7 @@ int main ( int argc, char* argv[] )
     input->DisconnectPipeline();
   }
 
-  // Rotate around a circle and fill the pixels
+  // Create tokens of all kinds
   InputIteratorType iIt( planarity, planarity->GetLargestPossibleRegion() );
   IteratorType It( input, input->GetLargestPossibleRegion() );
   iIt.GoToBegin();
@@ -123,7 +123,6 @@ int main ( int argc, char* argv[] )
   // Measure time taken
   itk::TimeProbe cputimer;
   cputimer.Start();
-
 
   // Do tensor voting
   TensorVotingFilterType::Pointer tensorVote = TensorVotingFilterType::New();
