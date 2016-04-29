@@ -63,41 +63,39 @@ TensorWithOrientation<TInputImage, TOutputImage>
   m_Output->Allocate();
   m_Output->FillBuffer( ZeroTensor );
 
-	// Why are we supplying -Theta
   if ( !m_RotationMatrixDefined )
     {
-      std::cerr << "Rotation matrix not defined. Please set as input." 
-        << std::endl;
+    std::cerr << "Rotation matrix not provided as input." << std::endl;
     }
 
   // Determine rotation matrix
   MatrixType iRot;
-	iRot = m_RotationMatrix.GetInverse();
+  iRot = m_RotationMatrix.GetInverse();
 
   // Set the interpolator input
   interpolator->SetInputImage( votingField );
 
-	// Iterate across all the pixels in the voting field
-	PixelType p, q;
+  // Iterate across all the pixels in the voting field
+  PixelType p, q;
   PointType p1, p3;
   vnlVectorType p2;
-	IndexType index;
-	OutputIteratorType It( m_Output, m_OutputRegion );
-	It.GoToBegin();
-	while( !It.IsAtEnd() )
-	{
-	  index = It.GetIndex();
+  IndexType index;
+  OutputIteratorType It( m_Output, m_OutputRegion );
+  It.GoToBegin();
+  while( !It.IsAtEnd() )
+    {
+    index = It.GetIndex();
     m_Output->TransformIndexToPhysicalPoint( index, p1 );
 
     p2 = m_RotationMatrix.GetVnlMatrix() * p1.GetVnlVector();
+
     for( unsigned int i = 0; i < ImageDimension; i++ )
       p3[i] = p2[i];
 
     if ( interpolator->IsInsideBuffer( p3 ) )
       {
       p = interpolator->Evaluate( p3 );
-      q = iRot.GetVnlMatrix() * p.GetVnlMatrix() * 
-        iRot.GetVnlMatrix().transpose();
+      q = iRot.GetVnlMatrix() * p.GetVnlMatrix() * iRot.GetVnlMatrix().transpose();
       It.Set( q );
       }
     else

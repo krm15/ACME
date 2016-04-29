@@ -46,6 +46,7 @@
 #include "itkVector.h"
 #include "itkMatrix.h"
 #include "itkImageToImageFilter.h"
+#include "itkGPUTensorWithOrientation.h"
 #include "itkTensorWithOrientation.h"
 #include "itkSymmetricEigenAnalysis.h"
 #include "itkNumericTraits.h"
@@ -111,10 +112,14 @@ public:
     ConstIteratorType;
   typedef ImageRegionIteratorWithIndex< ImageType > IteratorType;
 
-	typedef TensorWithOrientation< ImageType > OrientedTensorGeneratorType;
+  typedef TensorWithOrientation< ImageType > OrientedTensorGeneratorType;
   typedef typename OrientedTensorGeneratorType::Pointer 
     OrientedTensorGeneratorPointer;
-  typedef SymmetricEigenAnalysis< MatrixType, VectorType, MatrixType > 
+
+  typedef GPUTensorWithOrientation< ImageType > GPUOrientedTensorGeneratorType;
+  typedef typename GPUOrientedTensorGeneratorType::Pointer GPUOrientedTensorGeneratorPointer;
+
+  typedef SymmetricEigenAnalysis< MatrixType, VectorType, MatrixType >
     EigenCalculatorType;
 
 
@@ -137,7 +142,7 @@ protected:
   TensorVoting();
   virtual ~TensorVoting() {}
   void PrintSelf(std::ostream& os, Indent indent) const;
-  void ComputeOrientedField( double saliency, PointType& iCenter, 
+  void ComputeOrientedField( double saliency, PointType& iCenter,
     MatrixType& R, unsigned int i, int threadId );
   void ComputeVote( ImagePointer field, double saliency, int threadId );
   void OverlapRegion( ImagePointer A, ImagePointer B, 
@@ -162,6 +167,7 @@ protected:
   RegionType m_Region;
 
   TokenImagePointer m_TokenImage;
+  ImagePointer m_OrientedVotingField;
   ImagePointer m_Output;
   EigenCalculatorType m_EigenCalculator;
   std::vector< ImagePointer > m_VotingField;

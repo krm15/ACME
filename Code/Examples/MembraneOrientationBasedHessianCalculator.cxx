@@ -140,7 +140,7 @@ int main ( int argc, char* argv[] )
   hessianWriter->SetFileName( argv[2] );
   hessianWriter->SetInput ( m_StructFilter->GetEigenMatrix() );
 
-  // Write scaled hessian image
+  // Write planarity output
   InputWriterType::Pointer planarityFunction = InputWriterType::New();
   planarityFunction->SetFileName( argv[3] );
   planarityFunction->SetInput (  m_StructFilter->GetOutput() );

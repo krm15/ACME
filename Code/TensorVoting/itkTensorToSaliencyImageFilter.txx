@@ -33,7 +33,7 @@ TensorToSaliencyImageFilter< TInputImage, TOutputImage >
   m_EigenCalculator.SetDimension( ImageDimension );
 
   m_EigenMatrix = 0;
-	m_ComputeEigenMatrix = false;
+  m_ComputeEigenMatrix = false;
 
   this->Superclass::SetNumberOfRequiredInputs ( 1 );
   this->Superclass::SetNumberOfRequiredOutputs ( 1 );

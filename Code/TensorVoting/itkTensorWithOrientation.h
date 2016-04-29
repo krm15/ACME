@@ -34,7 +34,7 @@ namespace itk
 {
 
 /** \class StickFieldGeneratorWithOrientation2D
- * This calculator computes the stick field in 2D for a given angle.
+ * This calculator reorients the voting field given a rotation matrix.
  * It is templated over the output image type.
  *
  * \ingroup Operators

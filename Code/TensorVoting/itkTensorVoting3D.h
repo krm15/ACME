@@ -17,7 +17,17 @@
 #ifndef __itkTensorVoting3D_h
 #define __itkTensorVoting3D_h
 
-#include "itkTensorVoting.h"
+#include "itkSymmetricSecondRankTensor.h"
+#include "itkImageRegionIteratorWithIndex.h"
+#include "itkImage.h"
+#include "itkVector.h"
+#include "itkMatrix.h"
+#include "itkImageToImageFilter.h"
+#include "itkTensorWithOrientation.h"
+#include "itkSymmetricEigenAnalysis.h"
+#include "itkNumericTraits.h"
+#include <vector>
+
 #include "itkBallFieldGenerator3D.h"
 #include "itkPlateFieldGenerator3D.h"
 #include "itkStickFieldGenerator3D.h"
@@ -33,59 +43,106 @@ namespace itk
  * \ingroup Operators
  */
 template <class TInputImage >
-class ITK_EXPORT TensorVoting3D : public TensorVoting< TInputImage >
+class ITK_EXPORT TensorVoting3D :
+       public ImageToImageFilter< TInputImage, TInputImage >
 {
 public:
   /** Standard class typedefs. */
   typedef TensorVoting3D              Self;
-  typedef TensorVoting< TInputImage > Superclass;
+  typedef ImageToImageFilter<TInputImage, TInputImage > Superclass;
   typedef SmartPointer<Self>          Pointer;
   typedef SmartPointer<const Self>    ConstPointer;
 
-  /** Method for creation through the object factory. */
-  itkNewMacro(Self);
+/** Method for creation through the object factory. */
+itkNewMacro(Self);
 
   /** Run-time type information (and related methods). */
-  itkTypeMacro( TensorVoting3D, TensorVoting );
+  itkTypeMacro( TensorVoting3D, ImageToImageFilter );
 
   itkStaticConstMacro ( ImageDimension, unsigned int,
     TInputImage::ImageDimension );
 
   /** Type definition for the output image. */
-  typedef typename Superclass::ImageType     ImageType;
-  typedef typename Superclass::ImageConstPointer 
-    ImageConstPointer;
-  typedef typename Superclass::SpacingType SpacingType;
-  typedef typename Superclass::PixelType      PixelType;
-  typedef typename Superclass::IndexType      IndexType;
-  typedef typename Superclass::RegionType     RegionType;
-  typedef typename Superclass::SizeType       SizeType;
-  typedef typename Superclass::SizeValueType   SizeValueType;
-  typedef typename Superclass::PointType      PointType;
+  typedef TInputImage                             InputImageType;
+  typedef typename InputImageType::Pointer        InputImagePointer;
+  typedef typename InputImageType::ConstPointer   ImageConstPointer;
+  typedef typename InputImageType::PixelType      PixelType;
+  typedef typename InputImageType::IndexType      IndexType;
+  typedef typename InputImageType::RegionType     RegionType;
+  typedef typename InputImageType::SizeType       SizeType;
+  typedef typename SizeType::SizeValueType        SizeValueType;
+  typedef typename InputImageType::PointType      PointType;
+  typedef typename InputImageType::SpacingType    SpacingType;
 
-  typedef typename Superclass::VectorType VectorType;
-  typedef typename Superclass::MatrixType MatrixType;
+  typedef StickFieldGenerator3D< InputImageType >   StickGeneratorType;
+  typedef typename StickGeneratorType::Pointer      StickGeneratorPointer;
+  typedef PlateFieldGenerator3D< InputImageType >   PlateGeneratorType;
+  typedef typename PlateGeneratorType::Pointer      PlateGeneratorPointer;
+  typedef BallFieldGenerator3D< InputImageType >    BallGeneratorType;
+  typedef typename BallGeneratorType::Pointer       BallGeneratorPointer;
 
-  typedef StickFieldGenerator3D< ImageType > StickGeneratorType;
-  typedef typename StickGeneratorType::Pointer StickGeneratorPointer;
-  typedef PlateFieldGenerator3D< ImageType > PlateGeneratorType;
-  typedef typename PlateGeneratorType::Pointer PlateGeneratorPointer;
-  typedef BallFieldGenerator3D< ImageType > BallGeneratorType;
-  typedef typename BallGeneratorType::Pointer BallGeneratorPointer;
+  typedef GenerateRotationMatrixHelper< InputImageType > RotationMatrixHelperType;
 
-  typedef GenerateRotationMatrixHelper< ImageType > RotationMatrixHelperType;
+  /** Type definition for the output image. */
+  typedef Image< bool, ImageDimension >      TokenImageType;
+  typedef typename TokenImageType::Pointer   TokenImagePointer;
+  typedef ImageRegionIteratorWithIndex< TokenImageType > TokenIteratorType;
+
+  typedef Vector< double, ImageDimension > VectorType;
+  typedef Matrix< double, ImageDimension, ImageDimension> MatrixType;
+  typedef ImageRegionConstIteratorWithIndex< InputImageType > ConstIteratorType;
+  typedef ImageRegionIteratorWithIndex< InputImageType > IteratorType;
+
+  typedef std::list< IndexType > IdType;
+  typedef Image<IdType, ImageDimension> InternalImageType;
+  typedef typename InternalImageType::Pointer InternalImagePointer;
+  typedef ImageRegionIteratorWithIndex< InternalImageType > InternalIteratorType;
+
+  typedef TensorWithOrientation< InputImageType > OrientedTensorGeneratorType;
+  typedef typename OrientedTensorGeneratorType::Pointer OrientedTensorGeneratorPointer;
+  typedef SymmetricEigenAnalysis< MatrixType, VectorType, MatrixType >
+    EigenCalculatorType;
+
+  itkSetMacro( Sigma, double );
+  itkGetMacro( Sigma, double );
+  itkSetMacro( UseSparseVoting, bool );
+  itkGetMacro( UseSparseVoting, bool );
+
+  void SetTokenImage( TokenImagePointer token )
+  {
+    m_TokenImage = token;
+  }
+
+  TokenImagePointer GetTokenImage()
+  {
+    return m_TokenImage;
+  }
+
 
 protected:
   TensorVoting3D();
   virtual ~TensorVoting3D() {}
   void PrintSelf(std::ostream& os, Indent indent) const;
 
-  virtual void InitializeVotingFields(void);
-  virtual void ComputeThetaAndRotationAxis( VectorType& u, MatrixType& R ){}
-  virtual void ComputeTensorVoting( IndexType& index, PixelType& p, 
-    int threadId );
+  void ComputeOrientedField( MatrixType& R, unsigned int i );
+  void ComputeVote( double saliency );
+  void OverlapRegion( InputImagePointer A, InputImagePointer B, RegionType& rA, RegionType& rB );
+
+  void InitializeVotingFields(void);
+//  void ComputeTensorVoting( IndexType& index, PixelType& p );
+  void GenerateData();
 
   RotationMatrixHelperType rMatrixHelper;
+
+  double m_Sigma;
+  bool m_UseSparseVoting;
+  RegionType m_Region;
+
+  TokenImagePointer m_TokenImage;
+  InputImagePointer m_OrientedVotingField;
+  InputImagePointer m_Output;
+  EigenCalculatorType m_EigenCalculator;
+  std::vector< InputImagePointer > m_VotingField;
 
 private:
   TensorVoting3D(const Self&); //purposely not implemented
