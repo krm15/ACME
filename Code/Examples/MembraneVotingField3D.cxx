@@ -54,7 +54,7 @@ int main ( int argc, char* argv[] )
   if ( argc < 3 )
   {
     std::cerr << "Usage: " << std::endl;
-    std::cerr << argv[0] << " inputImage eigenImage outputSaliencyImage sigma";
+    std::cerr << argv[0] << " inputImage eigenImage outputSaliencyImage sigma <NumberOfThreads>";
     std::cerr << "" << std::endl;
     return EXIT_FAILURE;
   }
@@ -120,6 +120,10 @@ int main ( int argc, char* argv[] )
   }
   std::cout << "Filled input image..." << std::endl;
 
+  unsigned int NumberOfThreads = 24;
+  if ( argc > 5 )
+    NumberOfThreads = atoi( argv[5] );
+
   // Measure time taken
   itk::TimeProbe cputimer;
   cputimer.Start();
@@ -129,7 +133,7 @@ int main ( int argc, char* argv[] )
   tensorVote->SetInput( input );
   tensorVote->SetSigma( atof( argv[4] ) );
   tensorVote->SetUseSparseVoting( false );
-  tensorVote->SetNumberOfThreads( 12 );
+  tensorVote->SetNumberOfThreads( NumberOfThreads );
 
   try
     {
@@ -138,6 +142,7 @@ int main ( int argc, char* argv[] )
   catch ( itk::ExceptionObject e )
     {
     std::cerr << "Error: " << e << std::endl;
+    return EXIT_FAILURE;
     }
   std::cout << "Voting complete..." << std::endl;
 
@@ -146,6 +151,8 @@ int main ( int argc, char* argv[] )
 
   SaliencyFilterType::Pointer saliency = SaliencyFilterType::New();
   saliency->SetInput( tensorVote->GetOutput() );
+  saliency->SetComputeEigenMatrix( false );
+  saliency->SetNumberOfThreads( 24 );
   saliency->Update();
 
   IndexFilterType::Pointer componentExtractor = IndexFilterType::New();

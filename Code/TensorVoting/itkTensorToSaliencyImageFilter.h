@@ -70,28 +70,35 @@ public:
   typedef ImageRegionConstIterator< ImageType > ConstIteratorType;
   typedef ImageRegionIterator< OutputImageType > OutputIteratorType;
 
-	typedef ImageRegionIterator< MatrixImageType > MatrixIteratorType;
+  typedef ImageRegionIterator< MatrixImageType > MatrixIteratorType;
 	
   typedef SymmetricEigenAnalysis< MatrixType, VectorType, MatrixType > EigenCalculatorType;
 
-	MatrixImagePointer GetEigenMatrix()
-	{
-		return m_EigenMatrix;
-	}
+  MatrixImagePointer GetEigenMatrix()
+    {
+    return m_EigenMatrix;
+    }
 	
-	itkGetConstMacro ( ComputeEigenMatrix, bool );
-	itkSetMacro ( ComputeEigenMatrix, bool );
+  itkGetConstMacro ( ComputeEigenMatrix, bool );
+  itkSetMacro ( ComputeEigenMatrix, bool );
 	
 protected:
   TensorToSaliencyImageFilter();
-  virtual ~TensorToSaliencyImageFilter() {};
-  void GenerateData();
+  virtual ~TensorToSaliencyImageFilter() {}
+
+  void EnlargeOutputRequestedRegion(DataObject *output);
+  void GenerateInputRequestedRegion();
+  void BeforeThreadedGenerateData();
+  void AfterThreadedGenerateData(){}
+  void ThreadedGenerateData(const RegionType& windowRegion,
+    ThreadIdType threadId);
+
   void PrintSelf(std::ostream& os, Indent indent) const;
 
   EigenCalculatorType m_EigenCalculator;
 	
-	bool m_ComputeEigenMatrix;
-	MatrixImagePointer m_EigenMatrix;
+  bool m_ComputeEigenMatrix;
+  MatrixImagePointer m_EigenMatrix;
 
 private:
   TensorToSaliencyImageFilter(const Self&); //purposely not implemented

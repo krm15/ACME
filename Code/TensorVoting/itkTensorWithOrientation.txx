@@ -103,8 +103,8 @@ TensorWithOrientation<TInputImage, TOutputImage>
       p.Fill( 0.0 );
       It.Set( p );
       }
-		++It;
-	}
+    ++It;
+    }
 
   for( unsigned int i = 0; i < ImageDimension; i++ )
     origin[i] += m_Center[i];

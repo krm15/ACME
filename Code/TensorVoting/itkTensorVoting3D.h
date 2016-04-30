@@ -17,21 +17,23 @@
 #ifndef __itkTensorVoting3D_h
 #define __itkTensorVoting3D_h
 
-#include "itkSymmetricSecondRankTensor.h"
-#include "itkImageRegionIteratorWithIndex.h"
 #include "itkImage.h"
 #include "itkVector.h"
 #include "itkMatrix.h"
 #include "itkImageToImageFilter.h"
 #include "itkTensorWithOrientation.h"
-#include "itkSymmetricEigenAnalysis.h"
 #include "itkNumericTraits.h"
 #include <vector>
+#include "itkTensorToSaliencyImageFilter.h"
+#include "itkVectorIndexSelectionCastImageFilter.h"
+#include "itkImageRegionIteratorWithIndex.h"
 
 #include "itkBallFieldGenerator3D.h"
 #include "itkPlateFieldGenerator3D.h"
 #include "itkStickFieldGenerator3D.h"
 #include "itkGenerateRotationMatrixHelper.h"
+
+#include "itkTimeProbe.h"
 
 namespace itk
 {
@@ -100,8 +102,12 @@ itkNewMacro(Self);
 
   typedef TensorWithOrientation< InputImageType > OrientedTensorGeneratorType;
   typedef typename OrientedTensorGeneratorType::Pointer OrientedTensorGeneratorPointer;
-  typedef SymmetricEigenAnalysis< MatrixType, VectorType, MatrixType >
-    EigenCalculatorType;
+
+  typedef Image< double, ImageDimension > DoubleImageType;
+  typedef Image< VectorType, ImageDimension > VectorImageType;
+  typedef TensorToSaliencyImageFilter< InputImageType, VectorImageType > SaliencyFilterType;
+  typedef VectorIndexSelectionCastImageFilter< VectorImageType, DoubleImageType > IndexFilterType;
+  typedef ImageRegionIteratorWithIndex< DoubleImageType > DoubleIteratorType;
 
   itkSetMacro( Sigma, double );
   itkGetMacro( Sigma, double );
@@ -126,10 +132,11 @@ protected:
 
   void ComputeOrientedField( MatrixType& R, unsigned int i );
   void ComputeVote( double saliency );
+  void ComputeLookup();
+  void ComposeOutput();
   void OverlapRegion( InputImagePointer A, InputImagePointer B, RegionType& rA, RegionType& rB );
 
   void InitializeVotingFields(void);
-//  void ComputeTensorVoting( IndexType& index, PixelType& p );
   void GenerateData();
 
   RotationMatrixHelperType rMatrixHelper;
@@ -139,9 +146,10 @@ protected:
   RegionType m_Region;
 
   TokenImagePointer m_TokenImage;
+  InternalImagePointer m_Lookup;
+  typename DoubleImageType::Pointer m_StickSaliencyImage;
   InputImagePointer m_OrientedVotingField;
   InputImagePointer m_Output;
-  EigenCalculatorType m_EigenCalculator;
   std::vector< InputImagePointer > m_VotingField;
 
 private:

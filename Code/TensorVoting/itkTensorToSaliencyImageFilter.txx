@@ -45,34 +45,81 @@ TensorToSaliencyImageFilter< TInputImage, TOutputImage >
 template< class TInputImage, class TOutputImage >
 void
 TensorToSaliencyImageFilter< TInputImage, TOutputImage >
-::GenerateData(void)
+::EnlargeOutputRequestedRegion(DataObject *output)
+{
+  Superclass::EnlargeOutputRequestedRegion(output);
+  output->SetRequestedRegionToLargestPossibleRegion();
+}
+
+
+template< class TInputImage, class TOutputImage >
+void
+TensorToSaliencyImageFilter< TInputImage, TOutputImage >
+::GenerateInputRequestedRegion()
+{
+  Superclass::GenerateInputRequestedRegion();
+  if ( this->GetInput() )
+    {
+    ImagePointer image = const_cast< ImageType * >( this->GetInput() );
+    image->SetRequestedRegionToLargestPossibleRegion();
+    }
+}
+
+
+template< class TInputImage, class TOutputImage >
+void
+TensorToSaliencyImageFilter< TInputImage, TOutputImage >
+::BeforeThreadedGenerateData()
 {
   ImageConstPointer input = this->GetInput();
-  RegionType region = input->GetLargestPossibleRegion();
-  SpacingType spacing = input->GetSpacing();
-  PointType origin = input->GetOrigin();
+  RegionType region       = input->GetLargestPossibleRegion();
+  SpacingType spacing     = input->GetSpacing();
+  PointType origin        = input->GetOrigin();
 
-  // A zero tensor
+  // A zero vector and tensor
   VectorType ZeroVector;
-  ZeroVector.Fill( 0 );
+  ZeroVector.Fill( 0.0 );
+
+  MatrixType ZeroMatrix;
+  ZeroMatrix.Fill( 0.0 );
 
   // Allocate the output image
-  OutputImagePointer m_Output = OutputImageType::New();
+  OutputImagePointer m_Output = this->GetOutput();
   m_Output->SetRegions( region );
   m_Output->SetOrigin( origin );
   m_Output->SetSpacing( spacing );
   m_Output->Allocate();
   m_Output->FillBuffer( ZeroVector );
 
+  if ( m_ComputeEigenMatrix )
+    {
+    m_EigenMatrix = MatrixImageType::New();
+    m_EigenMatrix->SetRegions( region );
+    m_EigenMatrix->SetOrigin( origin );
+    m_EigenMatrix->SetSpacing( spacing );
+    m_EigenMatrix->Allocate();
+    m_EigenMatrix->FillBuffer( ZeroMatrix );\
+    }
+}
+
+
+template< class TInputImage, class TOutputImage >
+void
+TensorToSaliencyImageFilter< TInputImage, TOutputImage >
+::ThreadedGenerateData(const RegionType& windowRegion, ThreadIdType threadId)
+{
+  ImageConstPointer input = this->GetInput();
+  OutputImagePointer m_Output = this->GetOutput();
+
   // Iterate through the input image
-	MatrixType eigenMatrix;
+  MatrixType eigenMatrix;
   VectorType eigenVector;
-  ConstIteratorType It( input, region );
-  OutputIteratorType oIt( m_Output, region );
+  ConstIteratorType It( input, windowRegion );
+  OutputIteratorType oIt( m_Output, windowRegion );
 
   if ( m_ComputeEigenMatrix )
   {
-    MatrixIteratorType mIt( m_EigenMatrix, region );
+    MatrixIteratorType mIt( m_EigenMatrix, windowRegion );
     mIt.GoToBegin();
     It.GoToBegin();
     oIt.GoToBegin();
@@ -110,8 +157,6 @@ TensorToSaliencyImageFilter< TInputImage, TOutputImage >
       ++oIt;
     }
   }
-
-	this->GraftOutput( m_Output );
 }
 
 
