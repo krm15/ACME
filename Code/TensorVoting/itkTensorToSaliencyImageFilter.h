@@ -65,7 +65,7 @@ public:
 
   typedef Vector< double, ImageDimension > VectorType;
   typedef Matrix< double, ImageDimension, ImageDimension > MatrixType;
-	typedef Image< MatrixType, ImageDimension > MatrixImageType;
+  typedef Image< MatrixType, ImageDimension > MatrixImageType;
   typedef typename MatrixImageType::Pointer MatrixImagePointer;
   typedef ImageRegionConstIterator< ImageType > ConstIteratorType;
   typedef ImageRegionIterator< OutputImageType > OutputIteratorType;

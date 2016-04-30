@@ -146,96 +146,6 @@ TensorVoting3D< TInputImage >
   this->m_Region.SetIndex( index );
 }
 
-// Compute the region R in A that overlaps with B
-template< class TInputImage >
-void
-TensorVoting3D< TInputImage >
-::OverlapRegion( InputImagePointer A, InputImagePointer B,
-  RegionType& rA, RegionType& rB )
-{
-  SizeType sizeA, sizeB, s;
-  sizeA = A->GetLargestPossibleRegion().GetSize();
-  sizeB = B->GetLargestPossibleRegion().GetSize();
-
-  IndexType sIndexA, sIndexB;
-  IndexType tIndexA, tIndexB;
-
-  A->TransformPhysicalPointToIndex( B->GetOrigin(), tIndexA );
-  B->TransformPhysicalPointToIndex( A->GetOrigin(), tIndexB );
-
-  VectorType p = A->GetOrigin() - B->GetOrigin();
-
-  for( unsigned int i = 0; i < ImageDimension; i++ )
-  {
-    if ( p[i] > 0.0 )
-    {
-      sIndexA[i] = 0;
-      sIndexB[i] = tIndexB[i];
-      s[i] = sizeA[i];
-      if ( s[i] > static_cast< SizeValueType >( sizeB[i] - sIndexB[i] - 1 ) )
-      {
-        s[i] = sizeB[i] - sIndexB[i];
-      }
-    }
-    else
-    {
-      sIndexB[i] = 0;
-      sIndexA[i] = tIndexA[i];
-      s[i] = sizeB[i];
-      if ( s[i] > static_cast< SizeValueType >(
-        sizeA[i] - sIndexA[i] - 1 ) )
-      {
-        s[i] = sizeA[i] - sIndexA[i];
-      }
-    }
-  }
-
-  rA.SetIndex( sIndexA );
-  rA.SetSize( s );
-  rB.SetIndex( sIndexB );
-  rB.SetSize( s );
-}
-
-
-template< class TInputImage >
-void
-TensorVoting3D< TInputImage >
-::ComputeVote( double saliency )
-{
-  // Vote on the output
-  RegionType region1, region2;
-  OverlapRegion( m_OrientedVotingField, m_Output, region1, region2 );
-
-  IteratorType vIt( m_OrientedVotingField, region1 );
-  IteratorType oIt( m_Output, region2 );
-
-  oIt.GoToBegin();
-  vIt.GoToBegin();
-  while( !vIt.IsAtEnd() )
-  {
-    oIt.Set( oIt.Get() + vIt.Get()*saliency );
-    ++vIt;
-    ++oIt;
-  }
-}
-
-
-template< class TInputImage >
-void
-TensorVoting3D< TInputImage >
-::ComputeOrientedField( MatrixType& R, unsigned int i )
-{
-  // Generate local field
-  OrientedTensorGeneratorPointer orientedTensor = OrientedTensorGeneratorType::New();
-  orientedTensor->SetInput( m_VotingField[i] );
-  orientedTensor->SetRotationMatrix( R );
-  orientedTensor->SetOutputSpacing( m_Output->GetSpacing() );
-  orientedTensor->SetOutputRegion( m_Region );
-  orientedTensor->Update();
-  this->m_OrientedVotingField = orientedTensor->GetOutput();
-  this->m_OrientedVotingField->DisconnectPipeline();
-}
-
 
 template< class TInputImage >
 void
@@ -249,6 +159,7 @@ TensorVoting3D< TInputImage >
   MatrixType eigenMatrix, R;
   PointType pt;
   IdType ll;
+  bool token;
 
   RegionType region = this->GetInput()->GetLargestPossibleRegion();
 
@@ -270,18 +181,21 @@ TensorVoting3D< TInputImage >
   ConstIteratorType It( this->GetInput(), region );
   DoubleIteratorType sIt( m_StickSaliencyImage, region );
   IteratorType eIt( eigenMatrixImage, region );
+  TokenIteratorType tIt( m_TokenImage, region );
 
   It.GoToBegin();
   sIt.GoToBegin();
   eIt.GoToBegin();
+  tIt.GoToBegin();
   while( !It.IsAtEnd() )
     {
     index = It.GetIndex();
     p = It.Get();
     stickSaliency = sIt.Get();
     eigenMatrix = eIt.Get();
+    token = tIt.Get();
 
-    if ( stickSaliency > 0.001 )
+    if ( ( stickSaliency > 0.001 ) && ( token ) )
       {
       // Compute orientation (theta in 2D)
       u = eigenMatrix[ImageDimension-1];
@@ -300,56 +214,7 @@ TensorVoting3D< TInputImage >
     ++It;
     ++sIt;
     ++eIt;
-    }
-}
-
-template< class TInputImage >
-void
-TensorVoting3D< TInputImage >
-::ComposeOutput()
-{
-  IndexType index, index2;
-  VectorType u;
-  double stickSaliency;
-  MatrixType R;
-  PointType pt, origin, origin2;
-  IdType ll;
-
-  // Iterate through the list
-  InternalIteratorType iIt( m_Lookup, m_Lookup->GetLargestPossibleRegion() );
-  iIt.GoToBegin();
-  while( !iIt.IsAtEnd() )
-    {
-    ll = iIt.Get();
-    if ( ll.size() > 0 )
-      {
-      index2 = iIt.GetIndex();
-      m_Lookup->TransformIndexToPhysicalPoint( index2, pt );
-      for(unsigned int i = 0; i < ImageDimension; i++)
-        u[i] = pt[i];
-      rMatrixHelper.ComputeRotationMatrix( u, R );
-
-      // Compute the rotated voting field
-      this->ComputeOrientedField( R, 0 );
-      origin = m_OrientedVotingField->GetOrigin();
-
-      // Iterate the list,
-      for (typename IdType::const_iterator iter = ll.begin(); iter != ll.end(); ++iter)
-        {
-        // Update the origin of the voting field
-        index = *iter;
-        m_Output->TransformIndexToPhysicalPoint( index, pt );
-
-        for( unsigned int i = 0; i < ImageDimension; i++ )
-          origin2[i] = origin[i] + pt[i];
-
-        m_OrientedVotingField->SetOrigin( origin2 );
-        stickSaliency = m_StickSaliencyImage->GetPixel( index );
-        // Add to the output with salience
-        ComputeVote( stickSaliency );
-        }
-      }
-    ++iIt;
+    ++tIt;
     }
 }
 
@@ -366,7 +231,6 @@ TensorVoting3D< TInputImage >
   MatrixType ZeroTensor;
   ZeroTensor.Fill( 0 );
 
-  // Allocate the output image
   m_Output = InputImageType::New();
   m_Output->SetRegions( region );
   m_Output->CopyInformation( input );
@@ -388,28 +252,23 @@ TensorVoting3D< TInputImage >
       m_TokenImage->FillBuffer( true );
   }
 
-  itk::TimeProbe cputimer1, cputimer2;
-  cputimer1.Start();
-
-  // Fill Lookup with lists of all similar voxels
+ // Fill Lookup with lists of all similar voxels
   ComputeLookup();
 
-  cputimer1.Stop();
-  std::cout << "ComputeLookup took " << cputimer1.GetMean() << " seconds" << std::endl;
+  typename ComposeVotesFromLookupFilterType::Pointer composer = ComposeVotesFromLookupFilterType::New();
+  composer->SetInput( m_Lookup );
+  composer->SetVotingField( m_VotingField[0] );
+  composer->SetStickSaliencyImage( m_StickSaliencyImage );
+  composer->SetOutputImage( m_Output );
+  composer->SetNumberOfThreads( this->GetNumberOfThreads() );
+  composer->Update();
 
-  cputimer2.Start();
-
-  // Compose the voting fields
-  ComposeOutput();
-
-  cputimer2.Stop();
-  std::cout << "ComposeOutput took " << cputimer2.GetMean() << " seconds" << std::endl;
-
-  // Copy the padded output image to output
+    // Copy the padded output image to output
   this->GraftOutput( m_Output );
 
   std::cout << "Grafting complete..." << std::endl;
 }
+
 
 template< class TInputImage >
 void

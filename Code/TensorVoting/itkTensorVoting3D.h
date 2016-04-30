@@ -31,9 +31,7 @@
 #include "itkBallFieldGenerator3D.h"
 #include "itkPlateFieldGenerator3D.h"
 #include "itkStickFieldGenerator3D.h"
-#include "itkGenerateRotationMatrixHelper.h"
-
-#include "itkTimeProbe.h"
+#include "itkComposeVotesFromLookupImageFilter.h"
 
 namespace itk
 {
@@ -100,14 +98,14 @@ itkNewMacro(Self);
   typedef typename InternalImageType::Pointer InternalImagePointer;
   typedef ImageRegionIteratorWithIndex< InternalImageType > InternalIteratorType;
 
-  typedef TensorWithOrientation< InputImageType > OrientedTensorGeneratorType;
-  typedef typename OrientedTensorGeneratorType::Pointer OrientedTensorGeneratorPointer;
-
   typedef Image< double, ImageDimension > DoubleImageType;
   typedef Image< VectorType, ImageDimension > VectorImageType;
   typedef TensorToSaliencyImageFilter< InputImageType, VectorImageType > SaliencyFilterType;
   typedef VectorIndexSelectionCastImageFilter< VectorImageType, DoubleImageType > IndexFilterType;
   typedef ImageRegionIteratorWithIndex< DoubleImageType > DoubleIteratorType;
+
+  typedef ComposeVotesFromLookupImageFilter< InternalImageType >
+    ComposeVotesFromLookupFilterType;
 
   itkSetMacro( Sigma, double );
   itkGetMacro( Sigma, double );
@@ -130,16 +128,11 @@ protected:
   virtual ~TensorVoting3D() {}
   void PrintSelf(std::ostream& os, Indent indent) const;
 
-  void ComputeOrientedField( MatrixType& R, unsigned int i );
-  void ComputeVote( double saliency );
   void ComputeLookup();
-  void ComposeOutput();
   void OverlapRegion( InputImagePointer A, InputImagePointer B, RegionType& rA, RegionType& rB );
 
   void InitializeVotingFields(void);
   void GenerateData();
-
-  RotationMatrixHelperType rMatrixHelper;
 
   double m_Sigma;
   bool m_UseSparseVoting;
@@ -151,6 +144,7 @@ protected:
   InputImagePointer m_OrientedVotingField;
   InputImagePointer m_Output;
   std::vector< InputImagePointer > m_VotingField;
+
 
 private:
   TensorVoting3D(const Self&); //purposely not implemented
