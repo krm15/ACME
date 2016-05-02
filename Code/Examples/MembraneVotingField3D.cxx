@@ -47,6 +47,8 @@
 #include "itkVectorIndexSelectionCastImageFilter.h"
 #include "itkRescaleIntensityImageFilter.h"
 
+#include "itkTimeProbe.h"
+
 int main ( int argc, char* argv[] )
 {
   if ( argc < 3 )
@@ -118,6 +120,11 @@ int main ( int argc, char* argv[] )
   }
   std::cout << "Filled input image..." << std::endl;
 
+  // Measure time taken
+  itk::TimeProbe cputimer;
+  cputimer.Start();
+
+
   // Do tensor voting
   TensorVotingFilterType::Pointer tensorVote = TensorVotingFilterType::New();
   tensorVote->SetInput( input );
@@ -134,6 +141,9 @@ int main ( int argc, char* argv[] )
     std::cerr << "Error: " << e << std::endl;
     }
   std::cout << "Voting complete..." << std::endl;
+
+  cputimer.Stop();
+  std::cout << "Tensor voting filter took " << cputimer.GetMean() << " seconds" << std::endl;
 
   SaliencyFilterType::Pointer saliency = SaliencyFilterType::New();
   saliency->SetInput( tensorVote->GetOutput() );
