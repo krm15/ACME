@@ -35,7 +35,7 @@ int main(int argc, char* argv [] )
   if ( argc < 4 )
     {
     std::cerr << "Usage: " << std::endl;
-    std::cerr << argv[0] << " iInputImage oSaliencyImage iSigma <NumberOfThreads>" << std::endl;
+    std::cerr << argv[0] << " iInputImage oSaliencyImage iSigmaFiltering iSigmaVoting <NumberOfThreads>" << std::endl;
     return EXIT_FAILURE;
     }
 
@@ -46,20 +46,23 @@ int main(int argc, char* argv [] )
   typedef double        OutputPixelType;
 
   // Declare the types of the images
+  typedef itk::Vector< double, Dimension > VectorType;
+  typedef itk::Matrix< double, Dimension, Dimension> TokenPixelType;
+
   typedef itk::Image< InputPixelType, Dimension > InputImageType;
   typedef itk::Image< OutputPixelType, Dimension> OutputImageType;
-  typedef itk::ImageFileReader< InputImageType  > ImageReaderType;
-  typedef itk::ImageFileWriter< OutputImageType > ImageWriterType;
-
-  typedef itk::Matrix< double, Dimension, Dimension> TokenPixelType;
   typedef itk::Image< TokenPixelType, Dimension > TokenImageType;
-  typedef itk::ImageFileReader< TokenImageType > TokenReaderType;
-  typedef itk::TensorVoting3D< TokenImageType > TensorVotingFilterType;
+  typedef itk::Image< VectorType, Dimension > VectorImageType;
+
   typedef itk::ImageRegionIterator< TokenImageType > TokenIteratorType;
   typedef itk::ImageRegionIterator< OutputImageType > OutputIteratorType;
 
-  typedef itk::Vector< double, Dimension > VectorType;
-  typedef itk::Image< VectorType, Dimension > VectorImageType;
+  typedef itk::ImageFileReader< InputImageType  > ImageReaderType;
+  typedef itk::ImageFileReader< TokenImageType > TokenReaderType;
+  typedef itk::ImageFileWriter< OutputImageType > ImageWriterType;
+
+  typedef itk::MultiscaleStructMeasureImageFilter< InputImageType, OutputImageType> MultiscalePlateFilterType;
+  typedef itk::TensorVoting3D< TokenImageType > TensorVotingFilterType;
   typedef itk::TensorToSaliencyImageFilter< TokenImageType, VectorImageType > SaliencyFilterType;
   typedef itk::VectorIndexSelectionCastImageFilter< VectorImageType, OutputImageType > IndexFilterType;
   typedef itk::RescaleIntensityImageFilter< OutputImageType, InputImageType > RescaleFilterType;
@@ -72,10 +75,6 @@ int main(int argc, char* argv [] )
   std::cout << "Read input image..." << std::endl;
 
   // Declare the type of multiscale vesselness filter
-  typedef itk::MultiscaleStructMeasureImageFilter<
-    InputImageType, OutputImageType> MultiscalePlateFilterType;
-
-  // Create a vesselness Filter
   MultiscalePlateFilterType::Pointer MultiscalePlateFilter =
     MultiscalePlateFilterType::New();
   MultiscalePlateFilter->SetInput( reader->GetOutput() );
@@ -132,7 +131,7 @@ int main(int argc, char* argv [] )
 
   unsigned int NumberOfThreads = 24;
   if ( argc > 4 )
-    NumberOfThreads = atoi( argv[4] );
+    NumberOfThreads = atoi( argv[5] );
 
   // Measure time taken
   itk::TimeProbe cputimer;
