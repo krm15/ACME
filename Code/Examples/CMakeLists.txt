@@ -29,6 +29,9 @@ TARGET_LINK_LIBRARIES(ballVotingIntersectingCirclesExample2D ${ITK_LIBRARIES})
 ADD_EXECUTABLE(membraneVotingField3D MembraneVotingField3D.cxx)
 TARGET_LINK_LIBRARIES(membraneVotingField3D ${ITK_LIBRARIES})
 
+ADD_EXECUTABLE(multiscalePlanarityAndVoting3D MultiscalePlanarityAndVoting3D.cxx)
+TARGET_LINK_LIBRARIES(multiscalePlanarityAndVoting3D ${ITK_LIBRARIES})
+
 ADD_EXECUTABLE( membraneSegmentation MembraneSegmentationImageFilter.cxx)
 TARGET_LINK_LIBRARIES( membraneSegmentation ${ITK_LIBRARIES})
 
