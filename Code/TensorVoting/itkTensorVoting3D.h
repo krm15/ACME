@@ -99,6 +99,7 @@ itkNewMacro(Self);
   typedef ImageRegionIteratorWithIndex< InternalImageType > InternalIteratorType;
 
   typedef Image< double, ImageDimension > DoubleImageType;
+  typedef typename DoubleImageType::Pointer DoubleImagePointer;
   typedef Image< VectorType, ImageDimension > VectorImageType;
   typedef TensorToSaliencyImageFilter< InputImageType, VectorImageType > SaliencyFilterType;
   typedef VectorIndexSelectionCastImageFilter< VectorImageType, DoubleImageType > IndexFilterType;
@@ -116,6 +117,18 @@ itkNewMacro(Self);
   {
     m_TokenImage = token;
   }
+
+  void SetStickSaliencyImage( DoubleImagePointer saliency )
+  {
+    m_StickSaliencyImage = saliency;
+  }
+
+
+  void SetEigenMatrixImage( InputImagePointer eigen )
+  {
+    m_EigenMatrixImage = eigen;
+  }
+
 
   TokenImagePointer GetTokenImage()
   {
@@ -140,7 +153,8 @@ protected:
 
   TokenImagePointer m_TokenImage;
   InternalImagePointer m_Lookup;
-  typename DoubleImageType::Pointer m_StickSaliencyImage;
+  DoubleImagePointer m_StickSaliencyImage;
+  InputImagePointer m_EigenMatrixImage;
   InputImagePointer m_OrientedVotingField;
   InputImagePointer m_Output;
   std::vector< InputImagePointer > m_VotingField;

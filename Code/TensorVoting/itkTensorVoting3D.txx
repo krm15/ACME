@@ -56,6 +56,8 @@ TensorVoting3D<TInputImage >
   m_Sigma = 5.0;
   m_UseSparseVoting = 0;
   m_OrientedVotingField = ITK_NULLPTR;
+  m_StickSaliencyImage = ITK_NULLPTR;
+  m_EigenMatrixImage = ITK_NULLPTR;
 
   IdType emptyList;
   emptyList.clear();
@@ -163,24 +165,27 @@ TensorVoting3D< TInputImage >
 
   RegionType region = this->GetInput()->GetLargestPossibleRegion();
 
+  if  ( ( !m_EigenMatrixImage ) && (!m_StickSaliencyImage) )
+    {
   typename SaliencyFilterType::Pointer saliencyFilter = SaliencyFilterType::New();
   saliencyFilter->SetInput( this->GetInput() );
   saliencyFilter->SetComputeEigenMatrix( 1 );
   saliencyFilter->SetNumberOfThreads( this->GetNumberOfThreads() );
   saliencyFilter->Update();
   typename VectorImageType::Pointer saliencyImage = saliencyFilter->GetOutput();
-  InputImagePointer eigenMatrixImage = saliencyFilter->GetEigenMatrix();
+  this->m_EigenMatrixImage = saliencyFilter->GetEigenMatrix();
 
   typename IndexFilterType::Pointer componentExtractor = IndexFilterType::New();
   componentExtractor->SetInput( saliencyImage );
   componentExtractor->SetIndex( 2 );
   componentExtractor->Update();
   this->m_StickSaliencyImage = componentExtractor->GetOutput();
+    }
 
   // Compute an image of lists with similar pixel types
   ConstIteratorType It( this->GetInput(), region );
   DoubleIteratorType sIt( m_StickSaliencyImage, region );
-  IteratorType eIt( eigenMatrixImage, region );
+  IteratorType eIt( m_EigenMatrixImage, region );
   TokenIteratorType tIt( m_TokenImage, region );
 
   It.GoToBegin();

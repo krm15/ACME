@@ -87,20 +87,27 @@ int main ( int argc, char* argv[] )
     planarity->DisconnectPipeline();
   }
 
-  ImageType::Pointer input;
+  ImageType::Pointer eigen;
   {
     TokenReaderType::Pointer tReader = TokenReaderType::New();
     tReader->SetFileName( argv[2] );
     tReader->Update();
-    input = tReader->GetOutput();
-    input->DisconnectPipeline();
+    eigen = tReader->GetOutput();
+    eigen->DisconnectPipeline();
   }
+
+  ImageType::Pointer token = ImageType::New();
+  token->SetRegions( eigen->GetLargestPossibleRegion() );
+  token->CopyInformation( eigen );
+  token->Allocate();
 
   // Create tokens of all kinds
   InputIteratorType iIt( planarity, planarity->GetLargestPossibleRegion() );
-  IteratorType It( input, input->GetLargestPossibleRegion() );
+  IteratorType It( eigen, eigen->GetLargestPossibleRegion() );
+  IteratorType tokIt( token, eigen->GetLargestPossibleRegion() );
   iIt.GoToBegin();
   It.GoToBegin();
+  tokIt.GoToBegin();
   PixelType p;
   VectorType u;
   double q;
@@ -114,9 +121,10 @@ int main ( int argc, char* argv[] )
       {
         p[i][j] = p[j][i] = u[i]*u[j]*q;
       }
-    It.Set( p );
+    tokIt.Set( p );
     ++iIt;
     ++It;
+    ++tokIt;
   }
   std::cout << "Filled input image..." << std::endl;
 
@@ -130,8 +138,10 @@ int main ( int argc, char* argv[] )
 
   // Do tensor voting
   TensorVotingFilterType::Pointer tensorVote = TensorVotingFilterType::New();
-  tensorVote->SetInput( input );
+  tensorVote->SetInput( token );
   tensorVote->SetSigma( atof( argv[4] ) );
+  tensorVote->SetStickSaliencyImage( planarity );
+  tensorVote->SetEigenMatrixImage( eigen );
   tensorVote->SetUseSparseVoting( false );
   tensorVote->SetNumberOfThreads( NumberOfThreads );
 

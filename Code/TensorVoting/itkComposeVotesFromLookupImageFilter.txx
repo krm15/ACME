@@ -229,7 +229,11 @@ ComposeVotesFromLookupImageFilter< TInputImage >
       index2 = iIt.GetIndex();
       input->TransformIndexToPhysicalPoint( index2, pt );
       for(unsigned int i = 0; i < ImageDimension; i++)
+        {
         u[i] = pt[i];
+        // cos(theta)cos(phi), cos(theta)sin(phi), sin(theta)
+        }
+
       rMatrixHelper.ComputeRotationMatrix( u, R );
 
       // Compute the rotated voting field
