@@ -65,15 +65,15 @@ int main ( int argc, char* argv[] )
   typedef itk::ImageFileReader< InputImageType > ReaderType;
   typedef itk::ImageRegionIterator< InputImageType > InputIteratorType;
 
-  typedef itk::Matrix< double, Dimension, Dimension> PixelType;
-  typedef itk::Image< PixelType, Dimension > ImageType;
-  typedef itk::ImageFileReader< ImageType > TokenReaderType;
-  typedef itk::TensorVoting3D< ImageType > TensorVotingFilterType;
-  typedef itk::ImageRegionIterator< ImageType > IteratorType;
+  typedef itk::Matrix< double, Dimension, Dimension> MatrixPixelType;
+  typedef itk::Image< MatrixPixelType, Dimension > MatrixImageType;
+  typedef itk::ImageFileReader< MatrixImageType > TokenReaderType;
+  typedef itk::TensorVoting3D< MatrixImageType > TensorVotingFilterType;
+  typedef itk::ImageRegionIterator< MatrixImageType > IteratorType;
 
   typedef itk::Vector< double, Dimension > VectorType;
   typedef itk::Image< VectorType, Dimension > VectorImageType;
-  typedef itk::TensorToSaliencyImageFilter< ImageType, VectorImageType > SaliencyFilterType;
+  typedef itk::TensorToSaliencyImageFilter< MatrixImageType, VectorImageType > SaliencyFilterType;
   typedef itk::ImageFileWriter< FeatureImageType > WriterType;
   typedef itk::VectorIndexSelectionCastImageFilter< VectorImageType, InputImageType > IndexFilterType;
   typedef itk::RescaleIntensityImageFilter< InputImageType, FeatureImageType > RescaleFilterType;
@@ -87,7 +87,7 @@ int main ( int argc, char* argv[] )
     planarity->DisconnectPipeline();
   }
 
-  ImageType::Pointer eigen;
+  MatrixImageType::Pointer eigen;
   {
     TokenReaderType::Pointer tReader = TokenReaderType::New();
     tReader->SetFileName( argv[2] );
@@ -96,7 +96,7 @@ int main ( int argc, char* argv[] )
     eigen->DisconnectPipeline();
   }
 
-  ImageType::Pointer token = ImageType::New();
+  MatrixImageType::Pointer token = MatrixImageType::New();
   token->SetRegions( eigen->GetLargestPossibleRegion() );
   token->CopyInformation( eigen );
   token->Allocate();
@@ -108,7 +108,7 @@ int main ( int argc, char* argv[] )
   iIt.GoToBegin();
   It.GoToBegin();
   tokIt.GoToBegin();
-  PixelType p;
+  MatrixPixelType p;
   VectorType u;
   double q;
   while( !It.IsAtEnd() )
@@ -131,7 +131,11 @@ int main ( int argc, char* argv[] )
   unsigned int NumberOfThreads = 24;
   if ( argc > 5 )
     NumberOfThreads = atoi( argv[5] );
-
+  
+  
+  double m_Sigma = atof( argv[4] );
+  std::cout << m_Sigma << std::endl;
+  
   // Measure time taken
   itk::TimeProbe cputimer;
   cputimer.Start();
@@ -139,7 +143,7 @@ int main ( int argc, char* argv[] )
   // Do tensor voting
   TensorVotingFilterType::Pointer tensorVote = TensorVotingFilterType::New();
   tensorVote->SetInput( token );
-  tensorVote->SetSigma( atof( argv[4] ) );
+  tensorVote->SetSigma( m_Sigma );
   tensorVote->SetStickSaliencyImage( planarity );
   tensorVote->SetEigenMatrixImage( eigen );
   tensorVote->SetUseSparseVoting( false );

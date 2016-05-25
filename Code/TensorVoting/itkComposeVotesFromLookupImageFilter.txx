@@ -89,21 +89,10 @@ ComposeVotesFromLookupImageFilter< TInputImage >
 ::BeforeThreadedGenerateData()
 {
   std::cout << "Before Threaded Generate Data" << std::endl;
-
-  // A zero tensor
-  MatrixType ZeroTensor;
-  ZeroTensor.Fill( 0 );
-
+  
+  std::cout << this->GetOutput()->GetLargestPossibleRegion() << std::endl;
+  
   m_ThreadImage.resize( this->GetNumberOfThreads() );
-  for( unsigned int i = 0; i < this->GetNumberOfThreads(); i++ )
-  {
-    m_ThreadImage[i] = OutputImageType::New();
-    m_ThreadImage[i]->SetRegions( m_Output->GetLargestPossibleRegion() );
-    m_ThreadImage[i]->SetSpacing( m_Output->GetSpacing() );
-    m_ThreadImage[i]->CopyInformation( m_Output );
-    m_ThreadImage[i]->Allocate();
-    m_ThreadImage[i]->FillBuffer( ZeroTensor );
-  }
 }
 
 
@@ -112,9 +101,11 @@ void
 ComposeVotesFromLookupImageFilter< TInputImage >
 ::AfterThreadedGenerateData()
 {
+  std::cout << "After Threaded Generate Data" << std::endl;
+  
   for( unsigned int i = 0; i < this->GetNumberOfThreads(); i++ )
     {
-    OutputIteratorType tIt( m_ThreadImage[i], m_Output->GetLargestPossibleRegion() );
+    OutputIteratorType tIt( m_ThreadImage[i], m_ThreadImage[i]->GetLargestPossibleRegion() );
     OutputIteratorType oIt( m_Output, m_Output->GetLargestPossibleRegion() );
 
     oIt.GoToBegin();
@@ -126,6 +117,8 @@ ComposeVotesFromLookupImageFilter< TInputImage >
       ++oIt;
       }
     }
+    
+    std::cout << "After Threaded Generate Data complete" << std::endl;
 }
 
 
@@ -209,6 +202,18 @@ ComposeVotesFromLookupImageFilter< TInputImage >
 ::ThreadedGenerateData(const RegionType& windowRegion,
   ThreadIdType threadId)
 {
+  std::cout << "Threaded Generate Data" << std::endl;
+  // A zero tensor
+  MatrixType ZeroTensor;
+  ZeroTensor.Fill( 0 );
+  
+  m_ThreadImage[threadId] = OutputImageType::New();
+  m_ThreadImage[threadId]->SetRegions( m_Output->GetLargestPossibleRegion() );
+  m_ThreadImage[threadId]->SetSpacing( m_Output->GetSpacing() );
+  m_ThreadImage[threadId]->CopyInformation( m_Output );
+  m_ThreadImage[threadId]->Allocate();
+  m_ThreadImage[threadId]->FillBuffer( ZeroTensor );
+  
   InputImageConstPointer input = this->GetInput();
 
   IndexType index, index2;
@@ -266,7 +271,7 @@ ComposeVotesFromLookupImageFilter< TInputImage >
         }
       }
     ++iIt;
-    }
+    }    
 }
 
 

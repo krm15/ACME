@@ -143,6 +143,7 @@ TensorVoting3D< TInputImage >
   this->m_VotingField.push_back( ball->GetOutputImage() );
 
   double radius = vcl_floor( vcl_sqrt( -vcl_log(0.01) * (m_Sigma) * (m_Sigma) ) );
+  std::cout << radius << std::endl;
   SizeType size;
   SizeValueType rad;
   IndexType index;
@@ -176,37 +177,37 @@ TensorVoting3D< TInputImage >
 
   if  ( ( !m_EigenMatrixImage ) || (!m_StickSaliencyImage) )
     {
-  typename SaliencyFilterType::Pointer saliencyFilter = SaliencyFilterType::New();
-  saliencyFilter->SetInput( this->GetInput() );
-  saliencyFilter->SetComputeEigenMatrix( 1 );
-  saliencyFilter->SetNumberOfThreads( this->GetNumberOfThreads() );
-  saliencyFilter->Update();
-  typename VectorImageType::Pointer saliencyImage = saliencyFilter->GetOutput();
-  this->m_EigenMatrixImage = saliencyFilter->GetEigenMatrix();
+    typename SaliencyFilterType::Pointer saliencyFilter = SaliencyFilterType::New();
+    saliencyFilter->SetInput( this->GetInput() );
+    saliencyFilter->SetComputeEigenMatrix( 1 );
+    saliencyFilter->SetNumberOfThreads( this->GetNumberOfThreads() );
+    saliencyFilter->Update();
+    typename VectorImageType::Pointer saliencyImage = saliencyFilter->GetOutput();
+    this->m_EigenMatrixImage = saliencyFilter->GetEigenMatrix();
 
-  typename IndexFilterType::Pointer componentExtractor1 = IndexFilterType::New();
-  componentExtractor1->SetInput( saliencyImage );
-  componentExtractor1->SetIndex( 2 );
-  componentExtractor1->Update();
-  this->m_StickSaliencyImage = componentExtractor1->GetOutput();
+    typename IndexFilterType::Pointer componentExtractor1 = IndexFilterType::New();
+    componentExtractor1->SetInput( saliencyImage );
+    componentExtractor1->SetIndex( 2 );
+    componentExtractor1->Update();
+    this->m_StickSaliencyImage = componentExtractor1->GetOutput();
 
-  typename IndexFilterType::Pointer componentExtractor2 = IndexFilterType::New();
-  componentExtractor2->SetInput( saliencyImage );
-  componentExtractor2->SetIndex( 1 );
-  componentExtractor2->Update();
-  this->m_PlateSaliencyImage = componentExtractor2->GetOutput();
+    typename IndexFilterType::Pointer componentExtractor2 = IndexFilterType::New();
+    componentExtractor2->SetInput( saliencyImage );
+    componentExtractor2->SetIndex( 1 );
+    componentExtractor2->Update();
+    this->m_PlateSaliencyImage = componentExtractor2->GetOutput();
 
-  typename IndexFilterType::Pointer componentExtractor3 = IndexFilterType::New();
-  componentExtractor3->SetInput( saliencyImage );
-  componentExtractor3->SetIndex( 0 );
-  componentExtractor3->Update();
-  this->m_BallSaliencyImage = componentExtractor3->GetOutput();
+    typename IndexFilterType::Pointer componentExtractor3 = IndexFilterType::New();
+    componentExtractor3->SetInput( saliencyImage );
+    componentExtractor3->SetIndex( 0 );
+    componentExtractor3->Update();
+    this->m_BallSaliencyImage = componentExtractor3->GetOutput();
     }
-
+    
   // Compute an image of lists with similar pixel types
   ConstIteratorType It( this->GetInput(), region );
   DoubleIteratorType sIt( m_StickSaliencyImage, region );
-  DoubleIteratorType pIt( m_PlateSaliencyImage, region );
+//   DoubleIteratorType pIt( m_PlateSaliencyImage, region );
   IteratorType eIt( m_EigenMatrixImage, region );
   TokenIteratorType tIt( m_TokenImage, region );
 
@@ -219,7 +220,7 @@ TensorVoting3D< TInputImage >
     index = It.GetIndex();
     p = It.Get();
     stickSaliency = sIt.Get();
-    plateSaliency = pIt.Get();
+//     plateSaliency = pIt.Get();
     eigenMatrix = eIt.Get();
     token = tIt.Get();
 
@@ -259,7 +260,7 @@ TensorVoting3D< TInputImage >
     ++sIt;
     ++eIt;
     ++tIt;
-    ++pIt;
+//     ++pIt;
     }
 }
 
@@ -271,7 +272,7 @@ TensorVoting3D< TInputImage >
 {
   ImageConstPointer input = this->GetInput();
   RegionType region = input->GetLargestPossibleRegion();
-
+  
   // A zero tensor
   MatrixType ZeroTensor;
   ZeroTensor.Fill( 0 );
@@ -281,11 +282,11 @@ TensorVoting3D< TInputImage >
   m_Output->CopyInformation( input );
   m_Output->Allocate();
   m_Output->FillBuffer( ZeroTensor );
-
+  
   this->InitializeVotingFields();
 
   if ( !m_TokenImage )
-  {
+  {    
     m_TokenImage = TokenImageType::New();
     m_TokenImage->SetRegions( region );
     m_TokenImage->SetOrigin( input->GetOrigin() );
@@ -298,8 +299,9 @@ TensorVoting3D< TInputImage >
   }
 
  // Fill Lookup with lists of all similar voxels
+  std::cout << "Computing Lookup" << std::endl;
   ComputeLookup();
-
+  
   typename ComposeVotesFromLookupFilterType::Pointer composerStick = ComposeVotesFromLookupFilterType::New();
   composerStick->SetInput( m_LookupStick );
   composerStick->SetVotingField( m_VotingField[0] );
@@ -308,13 +310,13 @@ TensorVoting3D< TInputImage >
   composerStick->SetNumberOfThreads( this->GetNumberOfThreads() );
   composerStick->Update();
 
-  typename ComposeVotesFromLookupFilterType::Pointer composerPlate = ComposeVotesFromLookupFilterType::New();
-  composerPlate->SetInput( m_LookupPlate );
-  composerPlate->SetVotingField( m_VotingField[1] );
-  composerPlate->SetStickSaliencyImage( m_PlateSaliencyImage );
-  composerPlate->SetOutputImage( m_Output );
-  composerPlate->SetNumberOfThreads( this->GetNumberOfThreads() );
-  composerPlate->Update();
+//   typename ComposeVotesFromLookupFilterType::Pointer composerPlate = ComposeVotesFromLookupFilterType::New();
+//   composerPlate->SetInput( m_LookupPlate );
+//   composerPlate->SetVotingField( m_VotingField[1] );
+//   composerPlate->SetStickSaliencyImage( m_PlateSaliencyImage );
+//   composerPlate->SetOutputImage( m_Output );
+//   composerPlate->SetNumberOfThreads( this->GetNumberOfThreads() );
+//   composerPlate->Update();
 
   // Change ComposeVoteFilter to take a m_VotingField as input and m_Lookup image and another image
 
