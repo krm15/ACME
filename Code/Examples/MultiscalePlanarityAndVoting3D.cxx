@@ -43,29 +43,29 @@ int main(int argc, char* argv [] )
   // Define the dimension of the images
   const unsigned int    Dimension = 3;
   typedef unsigned char InputPixelType;
-  typedef double        OutputPixelType;
+  typedef double        InternalPixelType;
 
   // Declare the types of the images
   typedef itk::Vector< double, Dimension > VectorType;
   typedef itk::Matrix< double, Dimension, Dimension> TokenPixelType;
 
   typedef itk::Image< InputPixelType, Dimension > InputImageType;
-  typedef itk::Image< OutputPixelType, Dimension> OutputImageType;
+  typedef itk::Image< InternalPixelType, Dimension> InternalImageType;
   typedef itk::Image< TokenPixelType, Dimension > TokenImageType;
   typedef itk::Image< VectorType, Dimension > VectorImageType;
 
   typedef itk::ImageRegionIterator< TokenImageType > TokenIteratorType;
-  typedef itk::ImageRegionIterator< OutputImageType > OutputIteratorType;
+  typedef itk::ImageRegionIterator< InternalImageType > OutputIteratorType;
 
   typedef itk::ImageFileReader< InputImageType  > ImageReaderType;
   typedef itk::ImageFileReader< TokenImageType > TokenReaderType;
-  typedef itk::ImageFileWriter< OutputImageType > ImageWriterType;
+  typedef itk::ImageFileWriter< InternalImageType > ImageWriterType;
 
-  typedef itk::MultiscaleStructMeasureImageFilter< InputImageType, OutputImageType> MultiscalePlateFilterType;
+  typedef itk::MultiscaleStructMeasureImageFilter< InputImageType, InternalImageType> MultiscalePlateFilterType;
   typedef itk::TensorVoting3D< TokenImageType > TensorVotingFilterType;
   typedef itk::TensorToSaliencyImageFilter< TokenImageType, VectorImageType > SaliencyFilterType;
-  typedef itk::VectorIndexSelectionCastImageFilter< VectorImageType, OutputImageType > IndexFilterType;
-  typedef itk::RescaleIntensityImageFilter< OutputImageType, InputImageType > RescaleFilterType;
+  typedef itk::VectorIndexSelectionCastImageFilter< VectorImageType, InternalImageType > IndexFilterType;
+  typedef itk::RescaleIntensityImageFilter< InternalImageType, InputImageType > RescaleFilterType;
   typedef itk::ImageFileWriter< InputImageType > WriterType;
 
 
@@ -94,7 +94,7 @@ int main(int argc, char* argv [] )
     }
   std::cout << "Planarity complete..." << std::endl;
 
-  OutputImageType::Pointer planarity = MultiscalePlateFilter->GetOutput();
+  InternalImageType::Pointer planarity = MultiscalePlateFilter->GetOutput();
   TokenImageType::Pointer eigen = MultiscalePlateFilter->GetEigenMatrix();
 
   TokenImageType::Pointer token = TokenImageType::New();

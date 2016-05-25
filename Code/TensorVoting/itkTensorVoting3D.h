@@ -123,6 +123,15 @@ itkNewMacro(Self);
     m_StickSaliencyImage = saliency;
   }
 
+  void SetPlateSaliencyImage( DoubleImagePointer saliency )
+  {
+    m_PlateSaliencyImage = saliency;
+  }
+
+  void SetBallSaliencyImage( DoubleImagePointer saliency )
+  {
+    m_BallSaliencyImage = saliency;
+  }
 
   void SetEigenMatrixImage( InputImagePointer eigen )
   {
@@ -152,8 +161,13 @@ protected:
   RegionType m_Region;
 
   TokenImagePointer m_TokenImage;
-  InternalImagePointer m_Lookup;
+  InternalImagePointer m_LookupStick;
+  InternalImagePointer m_LookupPlate;
+
   DoubleImagePointer m_StickSaliencyImage;
+  DoubleImagePointer m_PlateSaliencyImage;
+  DoubleImagePointer m_BallSaliencyImage;
+
   InputImagePointer m_EigenMatrixImage;
   InputImagePointer m_OrientedVotingField;
   InputImagePointer m_Output;
