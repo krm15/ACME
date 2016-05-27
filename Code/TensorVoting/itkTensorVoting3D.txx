@@ -143,7 +143,7 @@ TensorVoting3D< TInputImage >
   this->m_VotingField.push_back( ball->GetOutputImage() );
 
   double radius = vcl_floor( vcl_sqrt( -vcl_log(0.01) * (m_Sigma) * (m_Sigma) ) );
-  std::cout << radius << std::endl;
+
   SizeType size;
   SizeValueType rad;
   IndexType index;
@@ -164,15 +164,6 @@ void
 TensorVoting3D< TInputImage >
 ::ComputeLookup()
 {
-  IndexType index, index2;
-  PixelType p;
-  VectorType u, v;
-  double stickSaliency, plateSaliency;
-  MatrixType eigenMatrix, R;
-  PointType pt;
-  IdType ll;
-  bool token;
-
   RegionType region = this->GetInput()->GetLargestPossibleRegion();
 
   if  ( ( !m_EigenMatrixImage ) || (!m_StickSaliencyImage) )
@@ -203,6 +194,16 @@ TensorVoting3D< TInputImage >
     componentExtractor3->Update();
     this->m_BallSaliencyImage = componentExtractor3->GetOutput();
     }
+    
+  std::cout << "Initialized saliency images" << std::endl;
+
+  IndexType index, index2;
+  PixelType p;
+  VectorType u, v;
+  double stickSaliency, plateSaliency;
+  MatrixType eigenMatrix, R;
+  PointType pt;
+  bool token;
     
   // Compute an image of lists with similar pixel types
   ConstIteratorType It( this->GetInput(), region );
@@ -235,26 +236,25 @@ TensorVoting3D< TInputImage >
           pt[i] = u[i];
 
       m_LookupStick->TransformPhysicalPointToIndex( pt, index2 );
-      ll = m_LookupStick->GetPixel( index2 );
-      ll.push_back( index );
-      m_LookupStick->SetPixel( index2, ll );
+      IdType *ll = &(m_LookupStick->GetPixel( index2 ));
+      ll->push_back( index );
+//       std::cout << index << ' ' << ll->size() << std::endl;
       }
 
-    if ( ( plateSaliency > 0.001 ) && ( token ) )
-      {
-      // Compute orientation (theta in 2D)
-      u = eigenMatrix[0];
-      if ( u[0] < 0 )
-        u = -u;
-
-      for(unsigned int i = 0; i < ImageDimension; i++)
-          pt[i] = u[i];
-
-      m_LookupPlate->TransformPhysicalPointToIndex( pt, index2 );
-      ll = m_LookupPlate->GetPixel( index2 );
-      ll.push_back( index );
-      m_LookupPlate->SetPixel( index2, ll );
-      }
+//     if ( ( plateSaliency > 0.001 ) && ( token ) )
+//       {
+//       // Compute orientation (theta in 2D)
+//       u = eigenMatrix[0];
+//       if ( u[0] < 0 )
+//         u = -u;
+// 
+//       for(unsigned int i = 0; i < ImageDimension; i++)
+//           pt[i] = u[i];
+// 
+//       m_LookupPlate->TransformPhysicalPointToIndex( pt, index2 );
+//       IdType *ll = &( m_LookupPlate->GetPixel( index2 ) );
+//       ll->push_back( index );
+//       }
 
     ++It;
     ++sIt;
