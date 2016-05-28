@@ -193,9 +193,7 @@ TensorVoting3D< TInputImage >
     componentExtractor3->SetIndex( 0 );
     componentExtractor3->Update();
     this->m_BallSaliencyImage = componentExtractor3->GetOutput();
-    }
-    
-  std::cout << "Initialized saliency images" << std::endl;
+    } 
 
   IndexType index, index2;
   PixelType p;

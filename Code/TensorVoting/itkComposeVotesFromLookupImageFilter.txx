@@ -88,10 +88,6 @@ void
 ComposeVotesFromLookupImageFilter< TInputImage >
 ::BeforeThreadedGenerateData()
 {
-  std::cout << "Before Threaded Generate Data" << std::endl;
-  
-  std::cout << this->GetOutput()->GetLargestPossibleRegion() << std::endl;
-  
   m_ThreadImage.resize( this->GetNumberOfThreads() );
 }
 
@@ -100,25 +96,24 @@ template< class TInputImage >
 void
 ComposeVotesFromLookupImageFilter< TInputImage >
 ::AfterThreadedGenerateData()
-{
-  std::cout << "After Threaded Generate Data" << std::endl;
-  
+{  
   for( unsigned int i = 0; i < this->GetNumberOfThreads(); i++ )
     {
-    OutputIteratorType tIt( m_ThreadImage[i], m_ThreadImage[i]->GetLargestPossibleRegion() );
-    OutputIteratorType oIt( m_Output, m_Output->GetLargestPossibleRegion() );
-
-    oIt.GoToBegin();
-    tIt.GoToBegin();
-    while( !tIt.IsAtEnd() )
+    if ( m_ThreadImage[i] )
       {
-      oIt.Set( oIt.Get() + tIt.Get() );
-      ++tIt;
-      ++oIt;
+      OutputIteratorType tIt( m_ThreadImage[i], m_ThreadImage[i]->GetLargestPossibleRegion() );
+      OutputIteratorType oIt( m_Output, m_Output->GetLargestPossibleRegion() );
+
+      oIt.GoToBegin();
+      tIt.GoToBegin();
+      while( !tIt.IsAtEnd() )
+        {
+        oIt.Set( oIt.Get() + tIt.Get() );
+        ++tIt;
+        ++oIt;
+        }
       }
     }
-    
-    std::cout << "After Threaded Generate Data complete" << std::endl;
 }
 
 
@@ -202,7 +197,6 @@ ComposeVotesFromLookupImageFilter< TInputImage >
 ::ThreadedGenerateData(const RegionType& windowRegion,
   ThreadIdType threadId)
 {
-  std::cout << "Threaded Generate Data" << std::endl;
   // A zero tensor
   MatrixType ZeroTensor;
   ZeroTensor.Fill( 0 );
