@@ -48,6 +48,7 @@
 #include "itkNumericTraits.h"
 #include <vector>
 
+#include <itkAzimuthElevationToCartesianTransform.h>
 #include "itkGenerateRotationMatrixHelper.h"
 
 namespace itk
@@ -107,6 +108,9 @@ public:
   typedef Image< double, ImageDimension > DoubleImageType;
   typedef typename DoubleImageType::Pointer DoubleImagePointer;
 
+  typedef AzimuthElevationToCartesianTransform< double, ImageDimension > CoordinateTransformType;
+  typedef typename CoordinateTransformType::Pointer CoordinateTransformPointer;
+  
   void SetVotingField( OutputImagePointer votingField )
   {
     m_VotingField = votingField;

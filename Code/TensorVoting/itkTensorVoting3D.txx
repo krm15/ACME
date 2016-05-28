@@ -65,19 +65,24 @@ TensorVoting3D<TInputImage >
   emptyList.clear();
 
   SpacingType nSpacing;
-  nSpacing[0] = nSpacing[1] = nSpacing[2] = 0.01;
+  nSpacing[0] = nSpacing[1] = 1.0;
+  nSpacing[2] = 1.0;
 
   PointType nOrigin;
-  nOrigin[0] = nOrigin[1] = -1.0;
-  nOrigin[2] = 0;
+  nOrigin[0] = -90.0;
+  nOrigin[1] = -90.0;
+  nOrigin[2] = 1.0;
 
   SizeType nSize;
-  nSize[0] = nSize[1] = 201;
-  nSize[2] = 101;
-
+  nSize[0] = 180;
+  nSize[1] = 180;
+  nSize[2] = 1;
+  
   IndexType nIndex;
-  nIndex[0] = nIndex[1] = nIndex[2] = 0;
-
+  nIndex[0] = 0;
+  nIndex[1] = 0;
+  nIndex[2] = 0;
+  
   RegionType nRegion;
   nRegion.SetSize( nSize );
   nRegion.SetIndex( nIndex );
@@ -89,6 +94,13 @@ TensorVoting3D<TInputImage >
   m_LookupStick->Allocate();
   m_LookupStick->FillBuffer( emptyList );
 
+//   m_OutputImg = OutputImageType::New(); 
+//   m_OutputImg->SetRegions( nRegion );
+//   m_OutputImg->SetOrigin( nOrigin );
+//   m_OutputImg->SetSpacing( nSpacing );
+//   m_OutputImg->Allocate();
+//   m_OutputImg->FillBuffer( 0 );
+  
   m_LookupPlate = InternalImageType::New();
   m_LookupPlate->SetRegions( nRegion );
   m_LookupPlate->SetOrigin( nOrigin );
@@ -195,12 +207,14 @@ TensorVoting3D< TInputImage >
     this->m_BallSaliencyImage = componentExtractor3->GetOutput();
     } 
 
+  CoordinateTransformPointer transform = CoordinateTransformType::New();
+    
   IndexType index, index2;
   PixelType p;
   VectorType u, v;
   double stickSaliency, plateSaliency;
   MatrixType eigenMatrix, R;
-  PointType pt;
+  PointType pt_cart, pt_sph;
   bool token;
     
   // Compute an image of lists with similar pixel types
@@ -231,12 +245,13 @@ TensorVoting3D< TInputImage >
         u = -u;
 
       for(unsigned int i = 0; i < ImageDimension; i++)
-          pt[i] = u[i];
-
-      m_LookupStick->TransformPhysicalPointToIndex( pt, index2 );
+          pt_cart[i] = u[i];
+      
+      pt_sph = transform->TransformCartesianToAzEl( pt_cart );
+     
+      m_LookupStick->TransformPhysicalPointToIndex( pt_sph, index2 );
       IdType *ll = &(m_LookupStick->GetPixel( index2 ));
       ll->push_back( index );
-//       std::cout << index << ' ' << ll->size() << std::endl;
       }
 
 //     if ( ( plateSaliency > 0.001 ) && ( token ) )
@@ -247,9 +262,11 @@ TensorVoting3D< TInputImage >
 //         u = -u;
 // 
 //       for(unsigned int i = 0; i < ImageDimension; i++)
-//           pt[i] = u[i];
+//           pt_cart[i] = u[i];
+//       
+//       pt_sph = transform->TransformCartesianToAzEl(pt_cart);
 // 
-//       m_LookupPlate->TransformPhysicalPointToIndex( pt, index2 );
+//       m_LookupPlate->TransformPhysicalPointToIndex( pt_sph, index2 );
 //       IdType *ll = &( m_LookupPlate->GetPixel( index2 ) );
 //       ll->push_back( index );
 //       }
@@ -260,6 +277,24 @@ TensorVoting3D< TInputImage >
     ++tIt;
 //     ++pIt;
     }
+    
+//     InternalIteratorType iIt( m_LookupStick, m_LookupStick->GetLargestPossibleRegion() );
+//     OutputIteratorType oIt( m_OutputImg, m_OutputImg->GetLargestPossibleRegion() );
+//     iIt.GoToBegin();
+//     oIt.GoToBegin();
+//     while( !iIt.IsAtEnd() )
+//     {
+//       IdType ll = iIt.Get();
+//       oIt.Set( ll.size() );
+//       ++iIt;
+//       ++oIt;
+//     }
+//     
+//     WriterPointer writer = WriterType::New();
+//     writer->SetInput( m_OutputImg );
+//     writer->SetFileName( "temp.mha" );
+//     writer->Update();
+    
 }
 
 
@@ -297,8 +332,8 @@ TensorVoting3D< TInputImage >
   }
 
  // Fill Lookup with lists of all similar voxels
-  std::cout << "Computing Lookup" << std::endl;
   ComputeLookup();
+  std::cout << "Computing lookup finished" << std::endl;
   
   typename ComposeVotesFromLookupFilterType::Pointer composerStick = ComposeVotesFromLookupFilterType::New();
   composerStick->SetInput( m_LookupStick );

@@ -31,7 +31,10 @@
 #include "itkBallFieldGenerator3D.h"
 #include "itkPlateFieldGenerator3D.h"
 #include "itkStickFieldGenerator3D.h"
+#include <itkAzimuthElevationToCartesianTransform.h>
 #include "itkComposeVotesFromLookupImageFilter.h"
+
+// #include "itkImageFileWriter.h"
 
 namespace itk
 {
@@ -97,7 +100,7 @@ itkNewMacro(Self);
   typedef Image<IdType, ImageDimension> InternalImageType;
   typedef typename InternalImageType::Pointer InternalImagePointer;
   typedef ImageRegionIteratorWithIndex< InternalImageType > InternalIteratorType;
-
+  
   typedef Image< double, ImageDimension > DoubleImageType;
   typedef typename DoubleImageType::Pointer DoubleImagePointer;
   typedef Image< VectorType, ImageDimension > VectorImageType;
@@ -105,9 +108,18 @@ itkNewMacro(Self);
   typedef VectorIndexSelectionCastImageFilter< VectorImageType, DoubleImageType > IndexFilterType;
   typedef ImageRegionIteratorWithIndex< DoubleImageType > DoubleIteratorType;
 
+  typedef AzimuthElevationToCartesianTransform< double, ImageDimension > CoordinateTransformType;
+  typedef typename CoordinateTransformType::Pointer CoordinateTransformPointer;
+  
   typedef ComposeVotesFromLookupImageFilter< InternalImageType >
     ComposeVotesFromLookupFilterType;
 
+//   typedef Image< unsigned short, ImageDimension > OutputImageType;
+//   typedef typename OutputImageType::Pointer OutputImagePointer;
+//   typedef ImageRegionIteratorWithIndex< OutputImageType > OutputIteratorType;
+//   typedef ImageFileWriter< OutputImageType > WriterType;
+//   typedef typename WriterType::Pointer WriterPointer;
+    
   itkSetMacro( Sigma, double );
   itkGetMacro( Sigma, double );
   itkSetMacro( UseSparseVoting, bool );
@@ -172,6 +184,8 @@ protected:
   InputImagePointer m_OrientedVotingField;
   InputImagePointer m_Output;
   std::vector< InputImagePointer > m_VotingField;
+  
+//   OutputImagePointer m_OutputImg;
 
 
 private:
