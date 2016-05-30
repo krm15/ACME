@@ -92,7 +92,6 @@ ComposeVotesFromLookupImageFilter< TInputImage >
   const InputImageType *outputPtr = this->GetOutput();
   const ImageRegionSplitterBase * splitter = this->GetImageRegionSplitter();
   m_ValidThreads = splitter->GetNumberOfSplits( outputPtr->GetRequestedRegion(), this->GetNumberOfThreads() );
-  
   m_ThreadImage.resize( m_ValidThreads );
 }
 
@@ -119,7 +118,7 @@ ComposeVotesFromLookupImageFilter< TInputImage >
     ++oIt;
   }
   
-  for( unsigned int i = 0; i < this->GetNumberOfThreads(); i++ )
+  for( unsigned int i = 0; i < m_ValidThreads; i++ )
     {
     m_ThreadImage[i] = ITK_NULLPTR;
     }
