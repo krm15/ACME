@@ -88,7 +88,12 @@ void
 ComposeVotesFromLookupImageFilter< TInputImage >
 ::BeforeThreadedGenerateData()
 {
-  m_ThreadImage.resize( this->GetNumberOfThreads() );
+  
+  const InputImageType *outputPtr = this->GetOutput();
+  const ImageRegionSplitterBase * splitter = this->GetImageRegionSplitter();
+  m_ValidThreads = splitter->GetNumberOfSplits( outputPtr->GetRequestedRegion(), this->GetNumberOfThreads() );
+  
+  m_ThreadImage.resize( m_ValidThreads );
 }
 
 
@@ -96,24 +101,29 @@ template< class TInputImage >
 void
 ComposeVotesFromLookupImageFilter< TInputImage >
 ::AfterThreadedGenerateData()
-{  
+{
+  AddNonScalarFilterPointer addFilter = AddNonScalarFilterType::New();
+  addFilter->SetInput( m_ThreadImage[0] );
+  addFilter->SetImageVector( m_ThreadImage );
+  addFilter->SetNumberOfThreads( this->GetNumberOfThreads() );
+  addFilter->Update();
+
+  OutputIteratorType tIt( addFilter->GetOutput(), m_Output->GetLargestPossibleRegion() );
+  OutputIteratorType oIt( m_Output, m_Output->GetLargestPossibleRegion() );
+  oIt.GoToBegin();
+  tIt.GoToBegin();
+  while( !tIt.IsAtEnd() )
+  {
+    oIt.Set( oIt.Get() + tIt.Get() );
+    ++tIt;
+    ++oIt;
+  }
+  
   for( unsigned int i = 0; i < this->GetNumberOfThreads(); i++ )
     {
-    if ( m_ThreadImage[i] )
-      {
-      OutputIteratorType tIt( m_ThreadImage[i], m_ThreadImage[i]->GetLargestPossibleRegion() );
-      OutputIteratorType oIt( m_Output, m_Output->GetLargestPossibleRegion() );
-
-      oIt.GoToBegin();
-      tIt.GoToBegin();
-      while( !tIt.IsAtEnd() )
-        {
-        oIt.Set( oIt.Get() + tIt.Get() );
-        ++tIt;
-        ++oIt;
-        }
-      }
+    m_ThreadImage[i] = ITK_NULLPTR;
     }
+  m_ThreadImage.clear();    
 }
 
 
@@ -196,16 +206,13 @@ void
 ComposeVotesFromLookupImageFilter< TInputImage >
 ::ThreadedGenerateData(const RegionType& windowRegion,
   ThreadIdType threadId)
-{
-  unsigned int numOfThreads = this->GetNumberOfThreads();
-  
+{  
   // A zero tensor
   MatrixType ZeroTensor;
   ZeroTensor.Fill( 0 );
   
   m_ThreadImage[threadId] = OutputImageType::New();
   m_ThreadImage[threadId]->SetRegions( m_Output->GetLargestPossibleRegion() );
-  m_ThreadImage[threadId]->SetSpacing( m_Output->GetSpacing() );
   m_ThreadImage[threadId]->CopyInformation( m_Output );
   m_ThreadImage[threadId]->Allocate();
   m_ThreadImage[threadId]->FillBuffer( ZeroTensor );
@@ -230,7 +237,7 @@ ComposeVotesFromLookupImageFilter< TInputImage >
     {
     index2 = iIt.GetIndex();
     ll = iIt.Get();
-    if ( ( ll.size() > 0 ) && ( counter%numOfThreads == static_cast<unsigned int>(threadId) ) )
+    if ( ( ll.size() > 0 ) && ( counter%m_ValidThreads == static_cast<unsigned int>(threadId) ) )
       {   
       input->TransformIndexToPhysicalPoint( index2, pt_sph );
       pt_cart = transform->TransformAzElToCartesian( pt_sph );
@@ -271,7 +278,7 @@ ComposeVotesFromLookupImageFilter< TInputImage >
       ++iIt;
       counter++;
     }    
-}
+} 
 
 
 template< class TInputImage >
@@ -286,3 +293,5 @@ ComposeVotesFromLookupImageFilter< TInputImage >
 } // end namespace itk
 
 #endif
+
+

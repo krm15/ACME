@@ -74,10 +74,10 @@ int main ( int argc, char* argv[] )
   typedef itk::Vector< double, Dimension > VectorType;
   typedef itk::Image< VectorType, Dimension > VectorImageType;
   typedef itk::TensorToSaliencyImageFilter< MatrixImageType, VectorImageType > SaliencyFilterType;
-  typedef itk::ImageFileWriter< FeatureImageType > WriterType;
   typedef itk::VectorIndexSelectionCastImageFilter< VectorImageType, InputImageType > IndexFilterType;
   typedef itk::RescaleIntensityImageFilter< InputImageType, FeatureImageType > RescaleFilterType;
-
+  typedef itk::ImageFileWriter< FeatureImageType > WriterType;
+  
   InputImageType::Pointer planarity;
   {
     ReaderType::Pointer sReader = ReaderType::New();

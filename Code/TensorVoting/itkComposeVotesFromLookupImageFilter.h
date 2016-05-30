@@ -47,6 +47,7 @@
 #include "itkInPlaceImageFilter.h"
 #include "itkNumericTraits.h"
 #include <vector>
+#include "itkAddNonScalarImageFilter.txx"
 
 #include <itkAzimuthElevationToCartesianTransform.h>
 #include "itkGenerateRotationMatrixHelper.h"
@@ -107,10 +108,14 @@ public:
   typedef typename OrientedTensorGeneratorType::Pointer OrientedTensorGeneratorPointer;
   typedef Image< double, ImageDimension > DoubleImageType;
   typedef typename DoubleImageType::Pointer DoubleImagePointer;
+  
+  typedef AddNonScalarImageFilter< OutputImageType > AddNonScalarFilterType;
+  typedef typename AddNonScalarFilterType::Pointer AddNonScalarFilterPointer;
 
   typedef AzimuthElevationToCartesianTransform< double, ImageDimension > CoordinateTransformType;
   typedef typename CoordinateTransformType::Pointer CoordinateTransformPointer;
-  
+ 
+    
   void SetVotingField( OutputImagePointer votingField )
   {
     m_VotingField = votingField;
@@ -148,6 +153,7 @@ protected:
   DoubleImagePointer m_StickSaliencyImage;
   OutputImagePointer m_Output;
   std::vector<OutputImagePointer> m_ThreadImage;
+  unsigned int m_ValidThreads;
 
 private:
   ComposeVotesFromLookupImageFilter(const Self&); //purposely not implemented
