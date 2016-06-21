@@ -98,6 +98,23 @@ public:
   itkNewMacro(Self);
 
   /** Set/Get macros for Alpha */
+  itkSetMacro(Alpha, double);
+  itkGetMacro(Alpha, double);
+
+  /** Set/Get macros for Beta */
+  itkSetMacro(Beta, double);
+  itkGetMacro(Beta, double);
+
+  /** Set/Get macros for Gamma */
+  itkSetMacro(Gamma, double);
+  itkGetMacro(Gamma, double);
+
+
+  /** Set/Get macros for C */
+  itkSetMacro(C, double);
+  itkGetMacro(C, double);
+
+  /** Set/Get macros for Alpha */
   itkSetMacro(SigmaMin, double);
   itkGetMacro(SigmaMin, double);
 
@@ -141,6 +158,11 @@ private:
   //purposely not implemented
   MultiscaleStructMeasureImageFilter(const Self&);
   void operator=(const Self&); //purposely not implemented
+
+  double m_Alpha;
+  double m_Beta;
+  double m_Gamma;
+  double m_C;
 
   double                             m_SigmaMin;
   double                             m_SigmaMax;

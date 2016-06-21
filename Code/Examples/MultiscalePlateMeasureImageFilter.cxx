@@ -27,9 +27,21 @@ int main(int argc, char* argv [] )
   if ( argc < 4 )
     {
     std::cerr << "Usage: " << std::endl;
-    std::cerr << argv[0] << " iInputImage oPlanarityImage oEigenMatrixImage iSigma" << std::endl;
+    std::cerr << argv[0] << " iInputImage oPlanarityImage oEigenMatrixImage iSigma ";
+    std::cerr << "<alpha> <beta> <gamma>" << std::endl;
     return EXIT_FAILURE;
     }
+
+  double m_Alpha = 0.5;
+  double m_Beta  = 0.5;
+  double m_Gamma = 8.0;
+
+  if ( argc > 5 )
+  {
+    m_Alpha = atof( argv[5] );
+    m_Beta = atof( argv[6] );
+    m_Gamma = atof( argv[7] );
+  }
 
 
   // Define the dimension of the images
@@ -69,8 +81,9 @@ int main(int argc, char* argv [] )
   MultiscalePlateFilter->SetSigmaMin( atof(argv[4])  );
   MultiscalePlateFilter->SetSigmaMax( atof(argv[4]) );
   MultiscalePlateFilter->SetNumberOfSigmaSteps( 1 );
-
-
+  MultiscalePlateFilter->SetAlpha( m_Alpha );
+  MultiscalePlateFilter->SetBeta( m_Beta );
+  MultiscalePlateFilter->SetGamma( m_Gamma );
   try
     {
     MultiscalePlateFilter->Update();

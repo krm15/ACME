@@ -171,7 +171,7 @@ int main ( int argc, char* argv[] )
 
   IndexFilterType::Pointer componentExtractor = IndexFilterType::New();
   componentExtractor->SetInput( saliency->GetOutput() );
-  componentExtractor->SetIndex( 2 );
+  componentExtractor->SetIndex( 1 );
   std::cout << "Saliency complete..." << std::endl;
 
   RescaleFilterType::Pointer rescale = RescaleFilterType::New();

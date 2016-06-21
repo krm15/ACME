@@ -38,6 +38,11 @@ MultiscaleStructMeasureImageFilter
   m_NumberOfSigmaSteps = 10;
   m_ObjectType = 0;
 
+  m_Alpha = 0.5;
+  m_Beta  = 0.5;
+  m_Gamma = 8.0;
+  m_C     = 10e-6;
+
   m_HessianFilter    = HessianFilterType::New();
   m_StructFilter      = StructFilterType::New();
   m_EigenMatrixImage = EigenMatrixImageType::New();
@@ -85,6 +90,9 @@ MultiscaleStructMeasureImageFilter
     m_HessianFilter->SetSigma( sigma );
     m_StructFilter->SetInput ( m_HessianFilter->GetOutput() );
     m_StructFilter->SetObjectType( m_ObjectType );
+    m_StructFilter->SetAlpha( m_Alpha );
+    m_StructFilter->SetBeta( m_Beta );
+    m_StructFilter->SetGamma( m_Gamma );
     m_StructFilter->Update();
 
     this->UpdateMaximumResponse();
