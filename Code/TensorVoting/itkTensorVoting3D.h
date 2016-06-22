@@ -113,6 +113,7 @@ itkNewMacro(Self);
   
   typedef ComposeVotesFromLookupImageFilter< InternalImageType >
     ComposeVotesFromLookupFilterType;
+  typedef typename ComposeVotesFromLookupFilterType::Pointer ComposeVotesFromLookupFilterPointer;
 
 //   typedef Image< unsigned short, ImageDimension > OutputImageType;
 //   typedef typename OutputImageType::Pointer OutputImagePointer;
@@ -165,8 +166,9 @@ protected:
   void ComputeLookup();
   void OverlapRegion( InputImagePointer A, InputImagePointer B, RegionType& rA, RegionType& rB );
 
-  void InitializeVotingFields(void);
+  void InitializeVotingFields();
   void GenerateData();
+  void InitializeLookupImages();
 
   double m_Sigma;
   bool m_UseSparseVoting;
