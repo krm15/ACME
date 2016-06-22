@@ -46,7 +46,6 @@
 #include "itkVector.h"
 #include "itkMatrix.h"
 #include "itkImageToImageFilter.h"
-#include "itkGPUTensorWithOrientation.h"
 #include "itkTensorWithOrientation.h"
 #include "itkSymmetricEigenAnalysis.h"
 #include "itkNumericTraits.h"
@@ -115,9 +114,6 @@ public:
   typedef TensorWithOrientation< ImageType > OrientedTensorGeneratorType;
   typedef typename OrientedTensorGeneratorType::Pointer 
     OrientedTensorGeneratorPointer;
-
-  typedef GPUTensorWithOrientation< ImageType > GPUOrientedTensorGeneratorType;
-  typedef typename GPUOrientedTensorGeneratorType::Pointer GPUOrientedTensorGeneratorPointer;
 
   typedef SymmetricEigenAnalysis< MatrixType, VectorType, MatrixType >
     EigenCalculatorType;
