@@ -291,24 +291,6 @@ TensorVoting3D< TInputImage >
     ++eIt;
     ++tIt;
   }
-    
-//     InternalIteratorType iIt( m_LookupStick, m_LookupStick->GetLargestPossibleRegion() );
-//     OutputIteratorType oIt( m_OutputImg, m_OutputImg->GetLargestPossibleRegion() );
-//     iIt.GoToBegin();
-//     oIt.GoToBegin();
-//     while( !iIt.IsAtEnd() )
-//     {
-//       IdType ll = iIt.Get();
-//       oIt.Set( ll.size() );
-//       ++iIt;
-//       ++oIt;
-//     }
-//     
-//     WriterPointer writer = WriterType::New();
-//     writer->SetInput( m_OutputImg );
-//     writer->SetFileName( "temp.mha" );
-//     writer->Update();
-    
 }
 
 
@@ -361,7 +343,7 @@ TensorVoting3D< TInputImage >
   ComposeVotesFromLookupFilterPointer composerStick = ComposeVotesFromLookupFilterType::New();
   composerStick->SetInput( m_LookupStick );
   composerStick->SetVotingField( m_VotingField[0] );
-  composerStick->SetStickSaliencyImage( m_StickSaliencyImage );
+  composerStick->SetSaliencyImage( m_StickSaliencyImage );
   composerStick->SetOutputImage( m_Output );
   composerStick->SetNumberOfThreads( this->GetNumberOfThreads() );
   composerStick->Update();
@@ -370,10 +352,14 @@ TensorVoting3D< TInputImage >
   ComposeVotesFromLookupFilterPointer composerPlate = ComposeVotesFromLookupFilterType::New();
   composerPlate->SetInput( m_LookupPlate );
   composerPlate->SetVotingField( m_VotingField[1] );
-  composerPlate->SetStickSaliencyImage( m_PlateSaliencyImage );
+  composerPlate->SetSaliencyImage( m_PlateSaliencyImage );
   composerPlate->SetOutputImage( m_Output );
   composerPlate->SetNumberOfThreads( this->GetNumberOfThreads() );
   composerPlate->Update();
+
+  // Add Ball voting field
+  if ( ( ballSaliency > 0.001 ) && ( token ) )
+  {}
 
   std::cout << "Integration completed" << std::endl;
 

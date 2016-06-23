@@ -186,9 +186,6 @@ protected:
   InputImagePointer m_OrientedVotingField;
   InputImagePointer m_Output;
   std::vector< InputImagePointer > m_VotingField;
-  
-//   OutputImagePointer m_OutputImg;
-
 
 private:
   TensorVoting3D(const Self&); //purposely not implemented

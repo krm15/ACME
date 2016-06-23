@@ -121,9 +121,9 @@ public:
     m_VotingField = votingField;
   }
 
-  void SetStickSaliencyImage( DoubleImagePointer stickSaliencyImage )
+  void SetSaliencyImage( DoubleImagePointer saliencyImage )
   {
-    m_StickSaliencyImage = stickSaliencyImage;
+    m_SaliencyImage = saliencyImage;
   }
 
   void SetOutputImage( OutputImagePointer output )
@@ -150,7 +150,7 @@ protected:
   RotationMatrixHelperType rMatrixHelper;
 
   OutputImagePointer m_VotingField;
-  DoubleImagePointer m_StickSaliencyImage;
+  DoubleImagePointer m_SaliencyImage;
   OutputImagePointer m_Output;
   std::vector<OutputImagePointer> m_ThreadImage;
   unsigned int m_ValidThreads;

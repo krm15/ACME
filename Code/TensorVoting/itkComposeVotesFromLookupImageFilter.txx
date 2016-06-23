@@ -222,7 +222,7 @@ ComposeVotesFromLookupImageFilter< TInputImage >
   
   IndexType index, index2;
   VectorType u;
-  double stickSaliency;
+  double saliency;
   MatrixType R;
   PointType pt_cart, pt_sph, origin, origin2;
   IdType ll;
@@ -256,6 +256,7 @@ ComposeVotesFromLookupImageFilter< TInputImage >
       orientedTensor->SetOutputRegion( m_VotingField->GetLargestPossibleRegion() );
       orientedTensor->Update();
       OutputImagePointer orientedVotingField = orientedTensor->GetOutput();
+      orientedVotingField->DisconnectPipeline();
 
       origin = orientedVotingField->GetOrigin();
 
@@ -266,12 +267,13 @@ ComposeVotesFromLookupImageFilter< TInputImage >
         index = *iter;
         m_Output->TransformIndexToPhysicalPoint( index, pt_cart );
         for( unsigned int i = 0; i < ImageDimension; i++ )
+        {
           origin2[i] = origin[i] + pt_cart[i];
-
+        }
         orientedVotingField->SetOrigin( origin2 );
-        stickSaliency = m_StickSaliencyImage->GetPixel( index );
-        // Add to the output with salience
-        ComputeVote( stickSaliency, threadId, orientedVotingField );
+        saliency = m_SaliencyImage->GetPixel( index );
+        // Add to the output with saliency
+        ComputeVote( saliency, threadId, orientedVotingField );
         }
       }
       ++iIt;
