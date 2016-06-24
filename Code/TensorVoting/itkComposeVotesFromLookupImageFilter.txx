@@ -227,6 +227,7 @@ ComposeVotesFromLookupImageFilter< TInputImage >
   double saliency;
   MatrixType R;
   PointType pt_cart, pt_sph, origin, origin2;
+  double theta;
   IdType ll;
   OutputImagePointer orientedVotingField;
 
@@ -258,13 +259,23 @@ ComposeVotesFromLookupImageFilter< TInputImage >
       {
       if( !m_BallVotingField )
       {
-        input->TransformIndexToPhysicalPoint( index2, pt_sph );
-        pt_cart = transform->TransformAzElToCartesian( pt_sph );
-        for(unsigned int i = 0; i < ImageDimension; i++)
-        {
-          u[i] = pt_cart[i];
-        }
-        rMatrixHelper.ComputeRotationMatrix( u, R );
+
+#if ( ImageDimension == 3 )
+          input->TransformIndexToPhysicalPoint( index2, pt_sph );
+          pt_cart = transform->TransformAzElToCartesian( pt_sph );
+          for(unsigned int i = 0; i < ImageDimension; i++)
+          {
+            u[i] = pt_cart[i];
+          }
+          rMatrixHelper.ComputeRotationMatrix( u, R );
+#else
+          theta = index2[0];
+
+          R[0][0] = vcl_cos( theta );
+          R[0][1] = -vcl_sin( theta );
+          R[1][0] = vcl_sin( theta );
+          R[1][1] = vcl_cos( theta );
+#endif
 
         // Compute the rotated voting field
         OrientedTensorGeneratorPointer orientedTensor = OrientedTensorGeneratorType::New();

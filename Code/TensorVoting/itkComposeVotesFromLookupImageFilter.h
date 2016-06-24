@@ -40,6 +40,8 @@
 #ifndef __itkComposeVotesFromLookupImageFilter_h
 #define __itkComposeVotesFromLookupImageFilter_h
 
+#include "itkImageRegionIterator.h"
+#include "itkImageRegionConstIterator.h"
 #include "itkImageRegionIteratorWithIndex.h"
 #include "itkImage.h"
 #include "itkVector.h"
@@ -48,7 +50,7 @@
 #include "itkNumericTraits.h"
 #include <vector>
 #include "itkAddNonScalarImageFilter.txx"
-
+#include "itkTensorWithOrientation.h"
 #include <itkAzimuthElevationToCartesianTransform.h>
 #include "itkGenerateRotationMatrixHelper.h"
 
@@ -90,7 +92,7 @@ public:
   typedef typename InputImageType::IndexType      IndexType;
   typedef typename InputImageType::RegionType     RegionType;
   typedef typename InputImageType::SizeType       SizeType;
-  typedef typename SizeType::SizeValueType   SizeValueType;
+  typedef typename SizeType::SizeValueType        SizeValueType;
   typedef typename InputImageType::PointType      PointType;
   typedef typename InputImageType::SpacingType    SpacingType;
 

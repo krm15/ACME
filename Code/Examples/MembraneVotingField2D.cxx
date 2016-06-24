@@ -59,7 +59,7 @@ int main ( int argc, char* argv[] )
     return EXIT_FAILURE;
   }
 
-  const unsigned int Dimension = 3;
+  const unsigned int Dimension = 2;
   typedef itk::Image< unsigned short, Dimension >   FeatureImageType;
   typedef itk::Image< double, Dimension > InputImageType;
   typedef itk::ImageFileReader< InputImageType > ReaderType;
@@ -68,7 +68,7 @@ int main ( int argc, char* argv[] )
   typedef itk::Matrix< double, Dimension, Dimension> MatrixPixelType;
   typedef itk::Image< MatrixPixelType, Dimension > MatrixImageType;
   typedef itk::ImageFileReader< MatrixImageType > TokenReaderType;
-  typedef itk::TensorVoting3D< MatrixImageType > TensorVotingFilterType;
+  typedef itk::TensorVoting2D< MatrixImageType > TensorVotingFilterType;
   typedef itk::ImageRegionIterator< MatrixImageType > IteratorType;
 
   typedef itk::Vector< double, Dimension > VectorType;

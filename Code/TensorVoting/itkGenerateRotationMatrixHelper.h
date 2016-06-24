@@ -70,7 +70,8 @@ public:
   typedef Matrix< double, ImageDimension, ImageDimension> MatrixType;
   typedef ImageRegionIteratorWithIndex< ImageType > IteratorType;
 
-  void ComputeRotationMatrixWithAxis( double ux, double uy, double uz, double theta, MatrixType& R )
+  void ComputeRotationMatrixWithAxis( double ux, double uy, double uz,
+                                      double theta, MatrixType& R )
   {
     R[0][0] = ux*ux + ( 1 - ux*ux )*vcl_cos( theta );
     R[0][1] = ux*uy*( 1 - vcl_cos(theta) ) - uz*vcl_sin( theta );
