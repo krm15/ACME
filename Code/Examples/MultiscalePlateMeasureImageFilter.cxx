@@ -32,6 +32,18 @@ int main(int argc, char* argv [] )
     return EXIT_FAILURE;
     }
 
+  // Define the dimension of the images
+  const unsigned int    Dimension = 3;
+  typedef unsigned char InputPixelType;
+  typedef double        OutputPixelType;
+
+  // Declare the types of the images
+  typedef itk::Image< InputPixelType, Dimension > InputImageType;
+  typedef itk::Image< OutputPixelType, Dimension> OutputImageType;
+  typedef itk::ImageFileReader< InputImageType  > ImageReaderType;
+  typedef itk::ImageFileWriter< OutputImageType > ImageWriterType;
+
+
   double m_Alpha = 0.5;
   double m_Beta  = 0.5;
   double m_Gamma = 8.0;
@@ -42,18 +54,6 @@ int main(int argc, char* argv [] )
     m_Beta = atof( argv[6] );
     m_Gamma = atof( argv[7] );
   }
-
-
-  // Define the dimension of the images
-  const unsigned int    Dimension = 3;
-  typedef unsigned short InputPixelType;
-  typedef double        OutputPixelType;
-
-  // Declare the types of the images
-  typedef itk::Image< InputPixelType, Dimension > InputImageType;
-  typedef itk::Image< OutputPixelType, Dimension> OutputImageType;
-  typedef itk::ImageFileReader< InputImageType  > ImageReaderType;
-  typedef itk::ImageFileWriter< OutputImageType > ImageWriterType;
 
   ImageReaderType::Pointer   reader = ImageReaderType::New();
   reader->SetFileName ( argv[1] );
