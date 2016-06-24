@@ -374,6 +374,7 @@ TensorVoting3D< TInputImage >
   composerStick->SetOutputImage( m_Output );
   composerStick->SetNumberOfThreads( this->GetNumberOfThreads() );
   composerStick->Update();
+  std::cout << "Stick voting completed" << std::endl;
 
   // Fill orientation lookup image with lists of similarly oriented voxels of type stick
   ComposeVotesFilterPointer composerPlate = ComposeVotesFilterType::New();
@@ -383,6 +384,7 @@ TensorVoting3D< TInputImage >
   composerPlate->SetOutputImage( m_Output );
   composerPlate->SetNumberOfThreads( this->GetNumberOfThreads() );
   composerPlate->Update();
+  std::cout << "Plate voting completed" << std::endl;
 
   // Add Ball voting field
   ComposeVotesFilterPointer composerBall = ComposeVotesFilterType::New();
@@ -393,7 +395,7 @@ TensorVoting3D< TInputImage >
   composerBall->SetOutputImage( m_Output );
   composerBall->SetNumberOfThreads( this->GetNumberOfThreads() );
   composerBall->Update();
-
+  std::cout << "Ball voting completed" << std::endl;
   std::cout << "Integration completed" << std::endl;
 
 
