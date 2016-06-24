@@ -26,6 +26,9 @@ TARGET_LINK_LIBRARIES(multiscalePlateMeasureImageFilter ${ITK_LIBRARIES})
 ADD_EXECUTABLE(ballVotingIntersectingCirclesExample2D BallVotingIntersectingCirclesExample2D.cxx)
 TARGET_LINK_LIBRARIES(ballVotingIntersectingCirclesExample2D ${ITK_LIBRARIES})
 
+ADD_EXECUTABLE(membraneVotingField2D MembraneVotingField2D.cxx)
+TARGET_LINK_LIBRARIES(membraneVotingField2D ${ITK_LIBRARIES} Random)
+
 ADD_EXECUTABLE(membraneVotingField3D MembraneVotingField3D.cxx)
 TARGET_LINK_LIBRARIES(membraneVotingField3D ${ITK_LIBRARIES} Random)
 
