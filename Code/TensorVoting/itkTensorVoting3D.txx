@@ -112,8 +112,14 @@ TensorVoting3D< TInputImage >
   m_LookupPlate->SetSpacing( nSpacing );
   m_LookupPlate->Allocate();
   m_LookupPlate->FillBuffer( emptyList );
-}
 
+  m_LookupBall = InternalImageType::New();
+  m_LookupBall->SetRegions( nRegion );
+  m_LookupBall->SetOrigin( nOrigin );
+  m_LookupBall->SetSpacing( nSpacing );
+  m_LookupBall->Allocate();
+  m_LookupBall->FillBuffer( emptyList );
+}
 
 template< class TInputImage >
 void
@@ -218,21 +224,25 @@ TensorVoting3D< TInputImage >
   IndexType index, index2;
   PixelType p;
   VectorType u, v;
-  double stickSaliency, plateSaliency;
+  double stickSaliency, plateSaliency, ballSaliency;
   MatrixType eigenMatrix, R;
   PointType pt_cart, pt_sph;
   bool token;
-    
-  // Compute an image of lists with similar pixel types
-  ConstIteratorType It( this->GetInput(), region );
+
+  SizeType nSize = m_LookupBall->GetLargestPossibleRegion().GetSize();
+
   DoubleIteratorType sIt( m_StickSaliencyImage, region );
   DoubleIteratorType pIt( m_PlateSaliencyImage, region );
-  IteratorType eIt( m_EigenMatrixImage, region );
-  TokenIteratorType tIt( m_TokenImage, region );
-
-  It.GoToBegin();
+  DoubleIteratorType bIt( m_BallSaliencyImage, region );
   sIt.GoToBegin();
   pIt.GoToBegin();
+  bIt.GoToBegin();
+
+  // Compute an image of lists with similar pixel types
+  ConstIteratorType It( this->GetInput(), region );
+  IteratorType eIt( m_EigenMatrixImage, region );
+  TokenIteratorType tIt( m_TokenImage, region );
+  It.GoToBegin();
   eIt.GoToBegin();
   tIt.GoToBegin();
 
@@ -240,10 +250,12 @@ TensorVoting3D< TInputImage >
   {
     index = It.GetIndex();
     p = It.Get();
-    stickSaliency = sIt.Get();
-    plateSaliency = pIt.Get();
     eigenMatrix = eIt.Get();
     token = tIt.Get();
+
+    stickSaliency = sIt.Get();
+    plateSaliency = pIt.Get();
+    ballSaliency  = bIt.Get();
 
     if ( ( stickSaliency > 0.001 ) && ( token ) )
     {
@@ -285,9 +297,25 @@ TensorVoting3D< TInputImage >
       ll->push_back( index );
     }
 
-    ++It;
+    RandomGeneratorPointer rand = RandomGeneratorType::New();
+    rand->Initialize();
+
+
+    if ( ( ballSaliency > 0.001 ) && ( token ) )
+    {
+      for(unsigned int i = 0; i < ImageDimension; i++)
+      {
+        index2[i] = rand->GetIntegerVariate( nSize[i]-1 );
+      }
+      IdType *ll = &( m_LookupBall->GetPixel( index2 ) );
+      ll->push_back( index );
+    }
+
     ++sIt;
     ++pIt;
+    ++bIt;
+
+    ++It;
     ++eIt;
     ++tIt;
   }
@@ -337,10 +365,9 @@ TensorVoting3D< TInputImage >
   ComputeLookup();
   std::cout << "Computing lookup finished" << std::endl;
 
-  // Fill orientation lookup image with lists of similarly oriented voxels of type stick
-  // Multithreaded filter
-  // Change ComposeVoteFilter to take a m_VotingField as input and m_Lookup image and another image
-  ComposeVotesFromLookupFilterPointer composerStick = ComposeVotesFromLookupFilterType::New();
+  // Fill orientation lookup image with lists of similarly oriented tokens
+  // Change ComposeVoteFilter to take a m_VotingField as input and m_Lookup image
+  ComposeVotesFilterPointer composerStick = ComposeVotesFilterType::New();
   composerStick->SetInput( m_LookupStick );
   composerStick->SetVotingField( m_VotingField[0] );
   composerStick->SetSaliencyImage( m_StickSaliencyImage );
@@ -349,7 +376,7 @@ TensorVoting3D< TInputImage >
   composerStick->Update();
 
   // Fill orientation lookup image with lists of similarly oriented voxels of type stick
-  ComposeVotesFromLookupFilterPointer composerPlate = ComposeVotesFromLookupFilterType::New();
+  ComposeVotesFilterPointer composerPlate = ComposeVotesFilterType::New();
   composerPlate->SetInput( m_LookupPlate );
   composerPlate->SetVotingField( m_VotingField[1] );
   composerPlate->SetSaliencyImage( m_PlateSaliencyImage );
@@ -358,8 +385,14 @@ TensorVoting3D< TInputImage >
   composerPlate->Update();
 
   // Add Ball voting field
-  if ( ( ballSaliency > 0.001 ) && ( token ) )
-  {}
+  ComposeVotesFilterPointer composerBall = ComposeVotesFilterType::New();
+  composerBall->SetInput( m_LookupBall );
+  composerBall->SetVotingField( m_VotingField[2] );
+  composerBall->SetVotingFieldTypeAsBall( true );
+  composerBall->SetSaliencyImage( m_BallSaliencyImage );
+  composerBall->SetOutputImage( m_Output );
+  composerBall->SetNumberOfThreads( this->GetNumberOfThreads() );
+  composerBall->Update();
 
   std::cout << "Integration completed" << std::endl;
 

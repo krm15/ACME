@@ -53,6 +53,8 @@ template< class TInputImage >
 ComposeVotesFromLookupImageFilter<TInputImage >
 ::ComposeVotesFromLookupImageFilter()
 {
+  m_BallVotingField = false;
+
   this->Superclass::SetNumberOfRequiredInputs ( 1 );
   this->Superclass::SetNumberOfRequiredOutputs ( 1 );
   this->Superclass::SetNthOutput ( 0, TInputImage::New() );
@@ -226,6 +228,22 @@ ComposeVotesFromLookupImageFilter< TInputImage >
   MatrixType R;
   PointType pt_cart, pt_sph, origin, origin2;
   IdType ll;
+  OutputImagePointer orientedVotingField;
+
+  // Compute the rotated voting field
+  if ( m_BallVotingField )
+  {
+    R.SetIdentity();
+
+    OrientedTensorGeneratorPointer orientedTensor = OrientedTensorGeneratorType::New();
+    orientedTensor->SetInput( m_VotingField );
+    orientedTensor->SetRotationMatrix( R );
+    orientedTensor->SetOutputSpacing( m_Output->GetSpacing() );
+    orientedTensor->SetOutputRegion( m_VotingField->GetLargestPossibleRegion() );
+    orientedTensor->Update();
+    orientedVotingField = orientedTensor->GetOutput();
+    orientedVotingField->DisconnectPipeline();
+  }
 
   // Iterate through the list
   ConstInputIteratorType iIt( input, input->GetLargestPossibleRegion() );
@@ -237,26 +255,27 @@ ComposeVotesFromLookupImageFilter< TInputImage >
     index2 = iIt.GetIndex();
     ll = iIt.Get();
     if ( ( ll.size() > 0 ) && ( counter%m_ValidThreads == static_cast<unsigned int>(threadId) ) )
-      {   
-      input->TransformIndexToPhysicalPoint( index2, pt_sph );
-      pt_cart = transform->TransformAzElToCartesian( pt_sph );
-    
-      for(unsigned int i = 0; i < ImageDimension; i++)
+      {
+      if( !m_BallVotingField )
+      {
+        input->TransformIndexToPhysicalPoint( index2, pt_sph );
+        pt_cart = transform->TransformAzElToCartesian( pt_sph );
+        for(unsigned int i = 0; i < ImageDimension; i++)
         {
-        u[i] = pt_cart[i];
+          u[i] = pt_cart[i];
         }
+        rMatrixHelper.ComputeRotationMatrix( u, R );
 
-      rMatrixHelper.ComputeRotationMatrix( u, R );
-
-      // Compute the rotated voting field
-      OrientedTensorGeneratorPointer orientedTensor = OrientedTensorGeneratorType::New();
-      orientedTensor->SetInput( m_VotingField );
-      orientedTensor->SetRotationMatrix( R );
-      orientedTensor->SetOutputSpacing( m_Output->GetSpacing() );
-      orientedTensor->SetOutputRegion( m_VotingField->GetLargestPossibleRegion() );
-      orientedTensor->Update();
-      OutputImagePointer orientedVotingField = orientedTensor->GetOutput();
-      orientedVotingField->DisconnectPipeline();
+        // Compute the rotated voting field
+        OrientedTensorGeneratorPointer orientedTensor = OrientedTensorGeneratorType::New();
+        orientedTensor->SetInput( m_VotingField );
+        orientedTensor->SetRotationMatrix( R );
+        orientedTensor->SetOutputSpacing( m_Output->GetSpacing() );
+        orientedTensor->SetOutputRegion( m_VotingField->GetLargestPossibleRegion() );
+        orientedTensor->Update();
+        orientedVotingField = orientedTensor->GetOutput();
+        orientedVotingField->DisconnectPipeline();
+      }
 
       origin = orientedVotingField->GetOrigin();
 

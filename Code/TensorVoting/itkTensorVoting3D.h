@@ -33,6 +33,7 @@
 #include "itkStickFieldGenerator3D.h"
 #include <itkAzimuthElevationToCartesianTransform.h>
 #include "itkComposeVotesFromLookupImageFilter.h"
+#include "itkThreadSafeMersenneTwisterRandomVariateGenerator.h"
 
 // #include "itkImageFileWriter.h"
 
@@ -112,15 +113,19 @@ itkNewMacro(Self);
   typedef typename CoordinateTransformType::Pointer CoordinateTransformPointer;
   
   typedef ComposeVotesFromLookupImageFilter< InternalImageType >
-    ComposeVotesFromLookupFilterType;
-  typedef typename ComposeVotesFromLookupFilterType::Pointer ComposeVotesFromLookupFilterPointer;
+    ComposeVotesFilterType;
+  typedef typename ComposeVotesFilterType::Pointer ComposeVotesFilterPointer;
 
 //   typedef Image< unsigned short, ImageDimension > OutputImageType;
 //   typedef typename OutputImageType::Pointer OutputImagePointer;
 //   typedef ImageRegionIteratorWithIndex< OutputImageType > OutputIteratorType;
 //   typedef ImageFileWriter< OutputImageType > WriterType;
 //   typedef typename WriterType::Pointer WriterPointer;
-    
+
+  typedef Statistics::ThreadSafeMersenneTwisterRandomVariateGenerator
+    RandomGeneratorType;
+  typedef typename RandomGeneratorType::Pointer RandomGeneratorPointer;
+
   itkSetMacro( Sigma, double );
   itkGetMacro( Sigma, double );
   itkSetMacro( UseSparseVoting, bool );
@@ -177,6 +182,7 @@ protected:
   TokenImagePointer m_TokenImage;
   InternalImagePointer m_LookupStick;
   InternalImagePointer m_LookupPlate;
+  InternalImagePointer m_LookupBall;
 
   DoubleImagePointer m_StickSaliencyImage;
   DoubleImagePointer m_PlateSaliencyImage;

@@ -131,7 +131,10 @@ public:
     m_Output = output;
   }
 
-
+  void SetVotingFieldTypeAsBall( bool votingType )
+  {
+    m_BallVotingField = votingType;
+  }
 
 protected:
   ComposeVotesFromLookupImageFilter();
@@ -154,6 +157,7 @@ protected:
   OutputImagePointer m_Output;
   std::vector<OutputImagePointer> m_ThreadImage;
   unsigned int m_ValidThreads;
+  bool m_BallVotingField;
 
 private:
   ComposeVotesFromLookupImageFilter(const Self&); //purposely not implemented
