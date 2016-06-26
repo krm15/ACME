@@ -17,23 +17,15 @@
 #ifndef __itkTensorVoting3D_h
 #define __itkTensorVoting3D_h
 
-#include "itkImage.h"
-#include "itkVector.h"
-#include "itkMatrix.h"
-#include "itkImageToImageFilter.h"
-#include "itkTensorWithOrientation.h"
-#include "itkNumericTraits.h"
-#include <vector>
-#include "itkTensorToSaliencyImageFilter.h"
-#include "itkVectorIndexSelectionCastImageFilter.h"
-#include "itkImageRegionIteratorWithIndex.h"
-
+#include "itkTensorVoting.h"
 #include "itkBallFieldGenerator3D.h"
 #include "itkPlateFieldGenerator3D.h"
 #include "itkStickFieldGenerator3D.h"
-#include <itkAzimuthElevationToCartesianTransform.h>
+#include "itkTensorToSaliencyImageFilter.h"
 #include "itkComposeVotesFromLookupImageFilter.h"
 #include "itkThreadSafeMersenneTwisterRandomVariateGenerator.h"
+#include "itkBallFieldGenerator3D.h"
+#include <itkAzimuthElevationToCartesianTransform.h>
 
 // #include "itkImageFileWriter.h"
 
@@ -48,20 +40,20 @@ namespace itk
  */
 template <class TInputImage >
 class ITK_EXPORT TensorVoting3D :
-       public ImageToImageFilter< TInputImage, TInputImage >
+ public TensorVoting< TInputImage >
 {
 public:
   /** Standard class typedefs. */
   typedef TensorVoting3D              Self;
-  typedef ImageToImageFilter<TInputImage, TInputImage > Superclass;
+  typedef TensorVoting<TInputImage >  Superclass;
   typedef SmartPointer<Self>          Pointer;
   typedef SmartPointer<const Self>    ConstPointer;
 
-/** Method for creation through the object factory. */
-itkNewMacro(Self);
+  /** Method for creation through the object factory. */
+  itkNewMacro(Self);
 
   /** Run-time type information (and related methods). */
-  itkTypeMacro( TensorVoting3D, ImageToImageFilter );
+  itkTypeMacro( TensorVoting3D, TensorVoting );
 
   itkStaticConstMacro ( ImageDimension, unsigned int,
     TInputImage::ImageDimension );
@@ -86,6 +78,8 @@ itkNewMacro(Self);
   typedef typename BallGeneratorType::Pointer       BallGeneratorPointer;
 
   typedef GenerateRotationMatrixHelper< InputImageType > RotationMatrixHelperType;
+  typedef AzimuthElevationToCartesianTransform< double, ImageDimension > CoordinateTransformType;
+  typedef typename CoordinateTransformType::Pointer CoordinateTransformPointer;
 
   /** Type definition for the output image. */
   typedef Image< bool, ImageDimension >      TokenImageType;
@@ -97,101 +91,32 @@ itkNewMacro(Self);
   typedef ImageRegionConstIteratorWithIndex< InputImageType > ConstIteratorType;
   typedef ImageRegionIteratorWithIndex< InputImageType > IteratorType;
 
+  typedef Image< VectorType, ImageDimension > VectorImageType;
+  typedef typename VectorImageType::Pointer VectorImagePointer;
+  typedef ImageRegionIterator< VectorImageType > VectorIteratorType;
+
   typedef std::list< IndexType > IdType;
-  typedef Image<IdType, ImageDimension> InternalImageType;
+  typedef Vector< IdType, ImageDimension > VectorInternalType;
+  typedef Image<VectorInternalType, ImageDimension> InternalImageType;
   typedef typename InternalImageType::Pointer InternalImagePointer;
   typedef ImageRegionIteratorWithIndex< InternalImageType > InternalIteratorType;
   
   typedef Image< double, ImageDimension > DoubleImageType;
   typedef typename DoubleImageType::Pointer DoubleImagePointer;
-  typedef Image< VectorType, ImageDimension > VectorImageType;
   typedef TensorToSaliencyImageFilter< InputImageType, VectorImageType > SaliencyFilterType;
   typedef VectorIndexSelectionCastImageFilter< VectorImageType, DoubleImageType > IndexFilterType;
   typedef ImageRegionIteratorWithIndex< DoubleImageType > DoubleIteratorType;
-
-  typedef AzimuthElevationToCartesianTransform< double, ImageDimension > CoordinateTransformType;
-  typedef typename CoordinateTransformType::Pointer CoordinateTransformPointer;
-  
-  typedef ComposeVotesFromLookupImageFilter< InternalImageType >
-    ComposeVotesFilterType;
-  typedef typename ComposeVotesFilterType::Pointer ComposeVotesFilterPointer;
-
-//   typedef Image< unsigned short, ImageDimension > OutputImageType;
-//   typedef typename OutputImageType::Pointer OutputImagePointer;
-//   typedef ImageRegionIteratorWithIndex< OutputImageType > OutputIteratorType;
-//   typedef ImageFileWriter< OutputImageType > WriterType;
-//   typedef typename WriterType::Pointer WriterPointer;
 
   typedef Statistics::ThreadSafeMersenneTwisterRandomVariateGenerator
     RandomGeneratorType;
   typedef typename RandomGeneratorType::Pointer RandomGeneratorPointer;
 
-  itkSetMacro( Sigma, double );
-  itkGetMacro( Sigma, double );
-  itkSetMacro( UseSparseVoting, bool );
-  itkGetMacro( UseSparseVoting, bool );
-
-  void SetTokenImage( TokenImagePointer token )
-  {
-    m_TokenImage = token;
-  }
-
-  void SetStickSaliencyImage( DoubleImagePointer saliency )
-  {
-    m_StickSaliencyImage = saliency;
-  }
-
-  void SetPlateSaliencyImage( DoubleImagePointer saliency )
-  {
-    m_PlateSaliencyImage = saliency;
-  }
-
-  void SetBallSaliencyImage( DoubleImagePointer saliency )
-  {
-    m_BallSaliencyImage = saliency;
-  }
-
-  void SetEigenMatrixImage( InputImagePointer eigen )
-  {
-    m_EigenMatrixImage = eigen;
-  }
-
-
-  TokenImagePointer GetTokenImage()
-  {
-    return m_TokenImage;
-  }
-
-
 protected:
   TensorVoting3D();
   virtual ~TensorVoting3D() {}
-  void PrintSelf(std::ostream& os, Indent indent) const;
-
-  void ComputeLookup();
-  void OverlapRegion( InputImagePointer A, InputImagePointer B, RegionType& rA, RegionType& rB );
 
   void InitializeVotingFields();
-  void GenerateData();
-  void InitializeLookupImages();
-
-  double m_Sigma;
-  bool m_UseSparseVoting;
-  RegionType m_Region;
-
-  TokenImagePointer m_TokenImage;
-  InternalImagePointer m_LookupStick;
-  InternalImagePointer m_LookupPlate;
-  InternalImagePointer m_LookupBall;
-
-  DoubleImagePointer m_StickSaliencyImage;
-  DoubleImagePointer m_PlateSaliencyImage;
-  DoubleImagePointer m_BallSaliencyImage;
-
-  InputImagePointer m_EigenMatrixImage;
-  InputImagePointer m_OrientedVotingField;
-  InputImagePointer m_Output;
-  std::vector< InputImagePointer > m_VotingField;
+  void ComputeLookup();
 
 private:
   TensorVoting3D(const Self&); //purposely not implemented

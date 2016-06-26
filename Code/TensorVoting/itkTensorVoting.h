@@ -40,17 +40,19 @@
 #ifndef __itkTensorVoting_h
 #define __itkTensorVoting_h
 
-#include "itkSymmetricSecondRankTensor.h"
-#include "itkImageRegionIteratorWithIndex.h"
 #include "itkImage.h"
 #include "itkVector.h"
 #include "itkMatrix.h"
 #include "itkImageToImageFilter.h"
 #include "itkTensorWithOrientation.h"
-#include "itkSymmetricEigenAnalysis.h"
 #include "itkNumericTraits.h"
 #include <vector>
+#include "itkVectorIndexSelectionCastImageFilter.h"
+#include "itkImageRegionIteratorWithIndex.h"
+#include "itkComposeVotesFromLookupImageFilter.h"
+#include "itkThreadSafeMersenneTwisterRandomVariateGenerator.h"
 
+// #include "itkImageFileWriter.h"
 
 namespace itk
 {
@@ -84,90 +86,78 @@ public:
     TInputImage::ImageDimension );
 
   /** Type definition for the output image. */
-  typedef TInputImage                        ImageType;
-  typedef typename ImageType::Pointer        ImagePointer;
-  typedef typename ImageType::ConstPointer   ImageConstPointer;
-  typedef typename ImageType::PixelType      PixelType;
-  typedef typename ImageType::IndexType      IndexType;
-  typedef typename ImageType::RegionType     RegionType;
-  typedef typename ImageType::SizeType       SizeType;
-  typedef typename SizeType::SizeValueType   SizeValueType;
-  typedef typename ImageType::PointType      PointType;
-  typedef typename ImageType::SpacingType    SpacingType;
-
-  typedef TInputImage                        InputImageType;
-  typedef typename ImageType::Pointer        InputImagePointer;
-  typedef typename ImageType::RegionType     OutputImageRegionType;
+  typedef TInputImage                             InputImageType;
+  typedef typename InputImageType::Pointer        InputImagePointer;
+  typedef typename InputImageType::ConstPointer   ImageConstPointer;
+  typedef typename InputImageType::PixelType      PixelType;
+  typedef typename InputImageType::IndexType      IndexType;
+  typedef typename InputImageType::RegionType     RegionType;
+  typedef typename InputImageType::SizeType       SizeType;
+  typedef typename SizeType::SizeValueType        SizeValueType;
+  typedef typename InputImageType::PointType      PointType;
+  typedef typename InputImageType::SpacingType    SpacingType;
 
   /** Type definition for the output image. */
   typedef Image< bool, ImageDimension >      TokenImageType;
   typedef typename TokenImageType::Pointer   TokenImagePointer;
-  typedef ImageRegionIteratorWithIndex< TokenImageType > 
-    TokenIteratorType;
+  typedef ImageRegionIteratorWithIndex< TokenImageType > TokenIteratorType;
 
   typedef Vector< double, ImageDimension > VectorType;
   typedef Matrix< double, ImageDimension, ImageDimension> MatrixType;
-  typedef ImageRegionConstIteratorWithIndex< ImageType > 
-    ConstIteratorType;
-  typedef ImageRegionIteratorWithIndex< ImageType > IteratorType;
+  typedef ImageRegionConstIteratorWithIndex< InputImageType > ConstIteratorType;
+  typedef ImageRegionIteratorWithIndex< InputImageType > IteratorType;
 
-  typedef TensorWithOrientation< ImageType > OrientedTensorGeneratorType;
-  typedef typename OrientedTensorGeneratorType::Pointer 
-    OrientedTensorGeneratorPointer;
+  typedef Image< VectorType, ImageDimension > VectorImageType;
+  typedef typename VectorImageType::Pointer VectorImagePointer;
+  typedef ImageRegionIterator< VectorImageType > VectorIteratorType;
 
-  typedef SymmetricEigenAnalysis< MatrixType, VectorType, MatrixType >
-    EigenCalculatorType;
+  typedef std::list< IndexType > IdType;
+  typedef Vector< IdType, ImageDimension > VectorInternalType;
+  typedef Image<VectorInternalType, ImageDimension> InternalImageType;
+  typedef typename InternalImageType::Pointer InternalImagePointer;
+  typedef ImageRegionIteratorWithIndex< InternalImageType > InternalIteratorType;
 
+  typedef Image< double, ImageDimension > DoubleImageType;
+  typedef typename DoubleImageType::Pointer DoubleImagePointer;
+  typedef VectorIndexSelectionCastImageFilter< VectorImageType, DoubleImageType > IndexFilterType;
+  typedef ImageRegionIteratorWithIndex< DoubleImageType > DoubleIteratorType;
+
+  typedef ComposeVotesFromLookupImageFilter< InternalImageType >
+    ComposeVotesFilterType;
+  typedef typename ComposeVotesFilterType::Pointer ComposeVotesFilterPointer;
 
   itkSetMacro( Sigma, double );
   itkGetMacro( Sigma, double );
   itkSetMacro( UseSparseVoting, bool );
   itkGetMacro( UseSparseVoting, bool );
 
-  void SetTokenImage( TokenImagePointer token )
-  {
-    m_TokenImage = token;
-  }
-
-  TokenImagePointer GetTokenImage()
-  {
-    return m_TokenImage;
-  }
+  itkSetObjectMacro( TokenImage, TokenImageType );
+  itkSetObjectMacro( SaliencyImage, VectorImageType );
+  itkSetObjectMacro( EigenMatrixImage, InputImageType );
 
 protected:
   TensorVoting();
   virtual ~TensorVoting() {}
   void PrintSelf(std::ostream& os, Indent indent) const;
-  void ComputeOrientedField( double saliency, PointType& iCenter,
-    MatrixType& R, unsigned int i, int threadId );
-  void ComputeVote( ImagePointer field, double saliency, int threadId );
-  void OverlapRegion( ImagePointer A, ImagePointer B, 
-    RegionType& rA, RegionType& rB );
+  void GenerateData();
 
-  void EnlargeOutputRequestedRegion(DataObject *output);
-  void GenerateInputRequestedRegion();
-  void BeforeThreadedGenerateData();
-  void AfterThreadedGenerateData();
-  void PadImage(const OutputImageRegionType& windowRegion, int threadId);
-  void ThreadedGenerateData(const OutputImageRegionType& windowRegion, 
-    ThreadIdType threadId);
+  void OverlapRegion( InputImagePointer A, InputImagePointer B, RegionType& rA, RegionType& rB );
+  double ComputeTheta( VectorType& u );
+  void InitializeLookupImages();
 
-  virtual void InitializeVotingFields(void);
-  virtual void ComputeThetaAndRotationAxis( VectorType& u, 
-    MatrixType& R ) = 0;
-  virtual void ComputeTensorVoting( IndexType& index, 
-    PixelType& p, int threadId ) = 0;
+  virtual void InitializeVotingFields() = 0;
+  virtual void ComputeLookup() = 0;
 
   double m_Sigma;
   bool m_UseSparseVoting;
   RegionType m_Region;
 
   TokenImagePointer m_TokenImage;
-  ImagePointer m_OrientedVotingField;
-  ImagePointer m_Output;
-  EigenCalculatorType m_EigenCalculator;
-  std::vector< ImagePointer > m_VotingField;
-  std::vector<ImagePointer> m_ThreadImage;
+  InternalImagePointer m_Lookup;
+  VectorImagePointer m_SaliencyImage;
+  InputImagePointer m_EigenMatrixImage;
+  InputImagePointer m_Output;
+  std::vector< InputImagePointer > m_VotingField;
 
 private:
   TensorVoting(const Self&); //purposely not implemented

@@ -53,73 +53,8 @@ template< class TInputImage >
 TensorVoting3D<TInputImage >
 ::TensorVoting3D()
 {
-  m_Sigma = 5.0;
-  m_UseSparseVoting = 0;
-  m_OrientedVotingField = ITK_NULLPTR;
-  m_StickSaliencyImage = ITK_NULLPTR;
-  m_PlateSaliencyImage = ITK_NULLPTR;
-  m_BallSaliencyImage = ITK_NULLPTR;
-  m_EigenMatrixImage = ITK_NULLPTR;
-
-  this->Superclass::SetNumberOfRequiredInputs ( 1 );
-  this->Superclass::SetNumberOfRequiredOutputs ( 1 );
-
-  this->Superclass::SetNthOutput ( 0, TInputImage::New() );
 }
 
-
-template< class TInputImage >
-void
-TensorVoting3D< TInputImage >
-::InitializeLookupImages()
-{
-  IdType emptyList;
-  emptyList.clear();
-
-  SpacingType nSpacing;
-  nSpacing[0] = nSpacing[1] = 1.0;
-  nSpacing[2] = 1.0;
-
-  PointType nOrigin;
-  nOrigin[0] = -90.0;
-  nOrigin[1] = -90.0;
-  nOrigin[2] = 1.0;
-
-  SizeType nSize;
-  nSize[0] = 180;
-  nSize[1] = 180;
-  nSize[2] = 1;
-
-  IndexType nIndex;
-  nIndex[0] = 0;
-  nIndex[1] = 0;
-  nIndex[2] = 0;
-
-  RegionType nRegion;
-  nRegion.SetSize( nSize );
-  nRegion.SetIndex( nIndex );
-
-  m_LookupStick = InternalImageType::New();
-  m_LookupStick->SetRegions( nRegion );
-  m_LookupStick->SetOrigin( nOrigin );
-  m_LookupStick->SetSpacing( nSpacing );
-  m_LookupStick->Allocate();
-  m_LookupStick->FillBuffer( emptyList );
-
-  m_LookupPlate = InternalImageType::New();
-  m_LookupPlate->SetRegions( nRegion );
-  m_LookupPlate->SetOrigin( nOrigin );
-  m_LookupPlate->SetSpacing( nSpacing );
-  m_LookupPlate->Allocate();
-  m_LookupPlate->FillBuffer( emptyList );
-
-  m_LookupBall = InternalImageType::New();
-  m_LookupBall->SetRegions( nRegion );
-  m_LookupBall->SetOrigin( nOrigin );
-  m_LookupBall->SetSpacing( nSpacing );
-  m_LookupBall->Allocate();
-  m_LookupBall->FillBuffer( emptyList );
-}
 
 template< class TInputImage >
 void
@@ -147,23 +82,25 @@ TensorVoting3D< TInputImage >
   stick->SetSigma ( this->m_Sigma );
   stick->SetSpacing( spacing );
   stick->ComputeStickField();
-  this->m_VotingField.push_back( stick->GetOutputImage() );
 
   PlateGeneratorPointer plate = PlateGeneratorType::New();
   plate->SetSigma ( this->m_Sigma );
   plate->SetInput( stick->GetOutputImage() );
   plate->SetSpacing( spacing );
   plate->ComputePlateField();
-  this->m_VotingField.push_back( plate->GetOutputImage() );
 
   BallGeneratorPointer ball = BallGeneratorType::New();
   ball->SetSigma ( this->m_Sigma );
   ball->SetInput( stick->GetOutputImage() );
   ball->SetSpacing( spacing );
   ball->ComputeBallField();
-  this->m_VotingField.push_back( ball->GetOutputImage() );
 
-  double radius = vcl_floor( vcl_sqrt( -vcl_log(0.01) * (m_Sigma) * (m_Sigma) ) );
+  this->m_VotingField.push_back( ball->GetOutputImage() );
+  this->m_VotingField.push_back( plate->GetOutputImage() );
+  this->m_VotingField.push_back( stick->GetOutputImage() );
+
+  double radius = vcl_floor( vcl_sqrt( -vcl_log(0.01) *
+                  (this->m_Sigma) * (this->m_Sigma) ) );
 
   SizeType size;
   SizeValueType rad;
@@ -187,64 +124,37 @@ TensorVoting3D< TInputImage >
 {
   RegionType region = this->GetInput()->GetLargestPossibleRegion();
 
-  if  ( ( !m_EigenMatrixImage   ) ||
-        ( !m_StickSaliencyImage ) ||
-        ( !m_PlateSaliencyImage ) ||
-        ( !m_BallSaliencyImage  ) )
+  if  ( ( !this->m_EigenMatrixImage ) || ( !this->m_SaliencyImage ) )
   {
     typename SaliencyFilterType::Pointer saliencyFilter = SaliencyFilterType::New();
     saliencyFilter->SetInput( this->GetInput() );
     saliencyFilter->SetComputeEigenMatrix( 1 );
     saliencyFilter->SetNumberOfThreads( this->GetNumberOfThreads() );
     saliencyFilter->Update();
-    typename VectorImageType::Pointer saliencyImage = saliencyFilter->GetOutput();
+    this->m_SaliencyImage = saliencyFilter->GetOutput();
     this->m_EigenMatrixImage = saliencyFilter->GetEigenMatrix();
-
-    typename IndexFilterType::Pointer componentExtractor1 = IndexFilterType::New();
-    componentExtractor1->SetInput( saliencyImage );
-    componentExtractor1->SetIndex( 2 );
-    componentExtractor1->Update();
-    this->m_StickSaliencyImage = componentExtractor1->GetOutput();
-
-    typename IndexFilterType::Pointer componentExtractor2 = IndexFilterType::New();
-    componentExtractor2->SetInput( saliencyImage );
-    componentExtractor2->SetIndex( 1 );
-    componentExtractor2->Update();
-    this->m_PlateSaliencyImage = componentExtractor2->GetOutput();
-
-    typename IndexFilterType::Pointer componentExtractor3 = IndexFilterType::New();
-    componentExtractor3->SetInput( saliencyImage );
-    componentExtractor3->SetIndex( 0 );
-    componentExtractor3->Update();
-    this->m_BallSaliencyImage = componentExtractor3->GetOutput();
   }
 
   CoordinateTransformPointer transform = CoordinateTransformType::New();
     
   IndexType index, index2;
   PixelType p;
-  VectorType u, v;
-  double stickSaliency, plateSaliency, ballSaliency;
+  VectorType u, saliency;
   MatrixType eigenMatrix, R;
   PointType pt_cart, pt_sph;
   bool token;
 
-  SizeType nSize = m_LookupBall->GetLargestPossibleRegion().GetSize();
-
-  DoubleIteratorType sIt( m_StickSaliencyImage, region );
-  DoubleIteratorType pIt( m_PlateSaliencyImage, region );
-  DoubleIteratorType bIt( m_BallSaliencyImage, region );
-  sIt.GoToBegin();
-  pIt.GoToBegin();
-  bIt.GoToBegin();
+  SizeType nSize = this->m_Lookup->GetLargestPossibleRegion().GetSize();
 
   // Compute an image of lists with similar pixel types
-  ConstIteratorType It( this->GetInput(), region );
-  IteratorType eIt( m_EigenMatrixImage, region );
-  TokenIteratorType tIt( m_TokenImage, region );
+  ConstIteratorType   It( this->GetInput(), region );
+  IteratorType       eIt( this->m_EigenMatrixImage, region );
+  TokenIteratorType  tIt( this->m_TokenImage, region );
+  VectorIteratorType sIt( this->m_SaliencyImage, region );
   It.GoToBegin();
   eIt.GoToBegin();
   tIt.GoToBegin();
+  sIt.GoToBegin();
 
   while( !It.IsAtEnd() )
   {
@@ -253,163 +163,49 @@ TensorVoting3D< TInputImage >
     eigenMatrix = eIt.Get();
     token = tIt.Get();
 
-    stickSaliency = sIt.Get();
-    plateSaliency = pIt.Get();
-    ballSaliency  = bIt.Get();
-
-    if ( ( stickSaliency > 0.001 ) && ( token ) )
-    {
-      // Compute orientation (theta in 2D)
-      // Eigen values were sorted based on magnitude.
-      // So last vector is the normal to the surface
-      u = eigenMatrix[ImageDimension-1]; // e2 is the normal
-      if ( u[2] < 0 )
-      {
-        u = -u;
-      }
-
-      for( unsigned int i = 0; i < ImageDimension; i++ )
-      {
-        pt_cart[i] = u[i];
-      }
-      pt_sph = transform->TransformCartesianToAzEl( pt_cart );
-     
-      m_LookupStick->TransformPhysicalPointToIndex( pt_sph, index2 );
-      IdType *ll = &( m_LookupStick->GetPixel( index2 ) );
-      ll->push_back( index );
-    }
-
-    if ( ( plateSaliency > 0.001 ) && ( token ) )
-    {
-      u = eigenMatrix[0];// this is normal to the plane spanned by e1 and e2 vectors
-      if ( u[0] < 0 )
-      {
-        u = -u;
-      }
-      for(unsigned int i = 0; i < ImageDimension; i++)
-      {
-        pt_cart[i] = u[i];
-      }
-      pt_sph = transform->TransformCartesianToAzEl(pt_cart);
-
-      m_LookupPlate->TransformPhysicalPointToIndex( pt_sph, index2 );
-      IdType *ll = &( m_LookupPlate->GetPixel( index2 ) );
-      ll->push_back( index );
-    }
+    saliency = sIt.Get();
 
     RandomGeneratorPointer rand = RandomGeneratorType::New();
     rand->Initialize();
 
-
-    if ( ( ballSaliency > 0.001 ) && ( token ) )
+    if ( ( saliency[0] > 0.001 ) && ( token ) )
     {
       for(unsigned int i = 0; i < ImageDimension; i++)
       {
         index2[i] = rand->GetIntegerVariate( nSize[i]-1 );
       }
-      IdType *ll = &( m_LookupBall->GetPixel( index2 ) );
+      IdType *ll = &( this->m_Lookup->GetPixel( index2 )[0] );
       ll->push_back( index );
     }
 
-    ++sIt;
-    ++pIt;
-    ++bIt;
+    for (unsigned int j = 1; j < ImageDimension; j++ )
+    {
+      if ( ( saliency[j] > 0.001 ) && ( token ) )
+      {
+        if ( j == 1 ) u = eigenMatrix[0];
+        if ( j == 2 ) u = eigenMatrix[2];
 
+        if ( u[0] < 0 )
+        {
+          u = -u;
+        }
+
+        for(unsigned int i = 0; i < ImageDimension; i++)
+        {
+          pt_cart[i] = u[i];
+        }
+        pt_sph = transform->TransformCartesianToAzEl( pt_cart );
+        this->m_Lookup->TransformPhysicalPointToIndex( pt_sph, index2 );
+        IdType *ll = &( this->m_Lookup->GetPixel( index2 )[j] );
+        ll->push_back( index );
+      }
+    }
+
+    ++sIt;
     ++It;
     ++eIt;
     ++tIt;
   }
-}
-
-
-template< class TInputImage >
-void
-TensorVoting3D< TInputImage >
-::GenerateData()
-{
-  InitializeLookupImages();
-
-  ImageConstPointer input = this->GetInput();
-  RegionType region = input->GetLargestPossibleRegion();
-  
-  // A zero tensor
-  MatrixType ZeroTensor;
-  ZeroTensor.Fill( 0 );
-
-  // Allocate the output image of voted tensors
-  m_Output = InputImageType::New();
-  m_Output->SetRegions( region );
-  m_Output->CopyInformation( input );
-  m_Output->Allocate();
-  m_Output->FillBuffer( ZeroTensor );
-  
-  // Initialize the voting fields
-  this->InitializeVotingFields();
-  std::cout << "Voting fields initialized" << std::endl;
-
-  // Token image of type bool specifying sparse or dense tokens
-  if ( !m_TokenImage )
-  {    
-    m_TokenImage = TokenImageType::New();
-    m_TokenImage->SetRegions( region );
-    m_TokenImage->SetOrigin( input->GetOrigin() );
-    m_TokenImage->SetSpacing( input->GetSpacing() );
-    m_TokenImage->Allocate();
-    if ( m_UseSparseVoting )
-      m_TokenImage->FillBuffer( false );
-    else
-      m_TokenImage->FillBuffer( true );
-  }
-
-  // Fill orientation lookup image with lists of similarly oriented voxels
-  ComputeLookup();
-  std::cout << "Computing lookup finished" << std::endl;
-
-  // Fill orientation lookup image with lists of similarly oriented tokens
-  // Change ComposeVoteFilter to take a m_VotingField as input and m_Lookup image
-  ComposeVotesFilterPointer composerStick = ComposeVotesFilterType::New();
-  composerStick->SetInput( m_LookupStick );
-  composerStick->SetVotingField( m_VotingField[0] );
-  composerStick->SetSaliencyImage( m_StickSaliencyImage );
-  composerStick->SetOutputImage( m_Output );
-  composerStick->SetNumberOfThreads( this->GetNumberOfThreads() );
-  composerStick->Update();
-  std::cout << "Stick voting completed" << std::endl;
-
-  // Fill orientation lookup image with lists of similarly oriented voxels of type stick
-  ComposeVotesFilterPointer composerPlate = ComposeVotesFilterType::New();
-  composerPlate->SetInput( m_LookupPlate );
-  composerPlate->SetVotingField( m_VotingField[1] );
-  composerPlate->SetSaliencyImage( m_PlateSaliencyImage );
-  composerPlate->SetOutputImage( m_Output );
-  composerPlate->SetNumberOfThreads( this->GetNumberOfThreads() );
-  composerPlate->Update();
-  std::cout << "Plate voting completed" << std::endl;
-
-  // Add Ball voting field
-  ComposeVotesFilterPointer composerBall = ComposeVotesFilterType::New();
-  composerBall->SetInput( m_LookupBall );
-  composerBall->SetVotingField( m_VotingField[2] );
-  composerBall->SetVotingFieldTypeAsBall( true );
-  composerBall->SetSaliencyImage( m_BallSaliencyImage );
-  composerBall->SetOutputImage( m_Output );
-  composerBall->SetNumberOfThreads( this->GetNumberOfThreads() );
-  composerBall->Update();
-  std::cout << "Ball voting completed" << std::endl;
-  std::cout << "Integration completed" << std::endl;
-
-
-  // Graft the output image
-  this->GraftOutput( m_Output );
-}
-
-
-template< class TInputImage >
-void
-TensorVoting3D< TInputImage >
-::PrintSelf( std::ostream& os, Indent indent ) const
-{
-  Superclass::PrintSelf(os,indent);
 }
 
 } // end namespace itk

@@ -96,11 +96,17 @@ public:
   typedef typename InputImageType::PointType      PointType;
   typedef typename InputImageType::SpacingType    SpacingType;
 
+  typedef std::list< IndexType > IdType;
+  typedef Vector< IdType, ImageDimension > VectorInternalType;
+
   typedef ImageRegionConstIterator< InputImageType > ConstInputIteratorType;
 
   typedef Vector< double, ImageDimension > VectorType;
+  typedef Image< VectorType, ImageDimension > VectorImageType;
+  typedef typename VectorImageType::Pointer VectorImagePointer;
+  typedef ImageRegionIterator< VectorImageType > VectorIteratorType;
+
   typedef Matrix< double, ImageDimension, ImageDimension > MatrixType;
-  typedef std::list< IndexType > IdType;
   typedef Image< MatrixType, ImageDimension >     OutputImageType;
   typedef typename OutputImageType::Pointer       OutputImagePointer;
   typedef ImageRegionIterator< OutputImageType >  OutputIteratorType;
@@ -108,6 +114,7 @@ public:
   typedef GenerateRotationMatrixHelper< OutputImageType > RotationMatrixHelperType;
   typedef TensorWithOrientation< OutputImageType > OrientedTensorGeneratorType;
   typedef typename OrientedTensorGeneratorType::Pointer OrientedTensorGeneratorPointer;
+
   typedef Image< double, ImageDimension > DoubleImageType;
   typedef typename DoubleImageType::Pointer DoubleImagePointer;
   
@@ -118,12 +125,12 @@ public:
   typedef typename CoordinateTransformType::Pointer CoordinateTransformPointer;
  
     
-  void SetVotingField( OutputImagePointer votingField )
+  void SetVotingField( std::vector< OutputImagePointer >& votingField )
   {
     m_VotingField = votingField;
   }
 
-  void SetSaliencyImage( DoubleImagePointer saliencyImage )
+  void SetSaliencyImage( VectorImagePointer saliencyImage )
   {
     m_SaliencyImage = saliencyImage;
   }
@@ -131,11 +138,6 @@ public:
   void SetOutputImage( OutputImagePointer output )
   {
     m_Output = output;
-  }
-
-  void SetVotingFieldTypeAsBall( bool votingType )
-  {
-    m_BallVotingField = votingType;
   }
 
 protected:
@@ -149,17 +151,18 @@ protected:
   void AfterThreadedGenerateData();
   void ThreadedGenerateData(const RegionType& windowRegion, ThreadIdType threadId);
 
+  void IntegrateBallVotingField( unsigned int threadId );
   void OverlapRegion( OutputImagePointer A, OutputImagePointer B, RegionType& rA, RegionType& rB );
   void ComputeVote( double saliency, unsigned int threadId, OutputImagePointer orientedVotingField );
 
   RotationMatrixHelperType rMatrixHelper;
 
-  OutputImagePointer m_VotingField;
-  DoubleImagePointer m_SaliencyImage;
+  std::vector< OutputImagePointer > m_VotingField;
+  VectorImagePointer m_SaliencyImage;
+
   OutputImagePointer m_Output;
   std::vector<OutputImagePointer> m_ThreadImage;
   unsigned int m_ValidThreads;
-  bool m_BallVotingField;
 
 private:
   ComposeVotesFromLookupImageFilter(const Self&); //purposely not implemented
