@@ -37,47 +37,39 @@
  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 =========================================================================*/
-#ifndef __itkComposeVotesFromLookupImageFilter_h
-#define __itkComposeVotesFromLookupImageFilter_h
+#ifndef __itkComposeVotesFromLookupImageFilter2D_h
+#define __itkComposeVotesFromLookupImageFilter2D_h
 
-#include "itkImageRegionIterator.h"
-#include "itkImageRegionConstIterator.h"
-#include "itkImageRegionIteratorWithIndex.h"
-#include "itkImage.h"
-#include "itkVector.h"
-#include "itkMatrix.h"
-#include "itkInPlaceImageFilter.h"
-#include "itkNumericTraits.h"
-#include <vector>
-#include "itkAddNonScalarImageFilter.txx"
-#include "itkTensorWithOrientation.h"
+#include "itkComposeVotesFromLookupImageFilter.h"
+
 
 namespace itk
 {
 
-/** \class ComposeVotesFromLookupImageFilter
+/** \class ComposeVotesFromLookupImageFilter2D
  * This class composes votes given a lookup image of voxels with same orientation.
  * It is templated over the input image type and output image type.
  *
  * \ingroup Operators
  */
 template <class TInputImage >
-class ITK_EXPORT ComposeVotesFromLookupImageFilter :
-public InPlaceImageFilter< TInputImage >
+class ITK_EXPORT ComposeVotesFromLookupImageFilter2D :
+public ComposeVotesFromLookupImageFilter< TInputImage >
 {
 public:
   /** Standard class typedefs. */
-  typedef ComposeVotesFromLookupImageFilter Self;
-  typedef InPlaceImageFilter< TInputImage > Superclass;
+  typedef ComposeVotesFromLookupImageFilter2D Self;
+  typedef ComposeVotesFromLookupImageFilter< TInputImage > Superclass;
   typedef SmartPointer<Self>                Pointer;
   typedef SmartPointer<const Self>          ConstPointer;
 
   /** Method for creation through the object factory. */
   // This is purposely not provided since this is an abstract class.
-//itkNewMacro(Self);
+  itkNewMacro(Self);
 
   /** Run-time type information (and related methods). */
-  itkTypeMacro( ComposeVotesFromLookupImageFilter, InPlaceImageFilter );
+  itkTypeMacro( ComposeVotesFromLookupImageFilter2D,
+                ComposeVotesFromLookupImageFilter );
 
   itkStaticConstMacro ( ImageDimension, unsigned int,
     TInputImage::ImageDimension );
@@ -94,62 +86,17 @@ public:
   typedef typename InputImageType::PointType      PointType;
   typedef typename InputImageType::SpacingType    SpacingType;
 
-  typedef std::list< IndexType > IdType;
-  typedef Vector< IdType, ImageDimension > VectorInternalType;
-
-  typedef ImageRegionConstIterator< InputImageType > ConstInputIteratorType;
-
-  typedef Vector< double, ImageDimension > VectorType;
-  typedef Image< VectorType, ImageDimension > VectorImageType;
-  typedef typename VectorImageType::Pointer VectorImagePointer;
-  typedef ImageRegionIterator< VectorImageType > VectorIteratorType;
-
   typedef Matrix< double, ImageDimension, ImageDimension > MatrixType;
-  typedef Image< MatrixType, ImageDimension >     OutputImageType;
-  typedef typename OutputImageType::Pointer       OutputImagePointer;
-  typedef ImageRegionIterator< OutputImageType >  OutputIteratorType;
-
-  typedef TensorWithOrientation< OutputImageType > OrientedTensorGeneratorType;
-  typedef typename OrientedTensorGeneratorType::Pointer OrientedTensorGeneratorPointer;
-
-  typedef Image< double, ImageDimension > DoubleImageType;
-  typedef typename DoubleImageType::Pointer DoubleImagePointer;
-  
-  typedef AddNonScalarImageFilter< OutputImageType > AddNonScalarFilterType;
-  typedef typename AddNonScalarFilterType::Pointer AddNonScalarFilterPointer; 
-
-  typedef std::vector< OutputImagePointer > OutputVectorType;
-
-  itkSetMacro( VotingField, OutputVectorType );
-  itkSetObjectMacro( SaliencyImage, VectorImageType );
-  itkSetObjectMacro( OutputImage, OutputImageType );
 
 protected:
-  ComposeVotesFromLookupImageFilter();
-  virtual ~ComposeVotesFromLookupImageFilter() {}
-  void PrintSelf(std::ostream& os, Indent indent) const;
+  ComposeVotesFromLookupImageFilter2D();
+  virtual ~ComposeVotesFromLookupImageFilter2D() {}
 
-  void EnlargeOutputRequestedRegion(DataObject *output);
-  void GenerateInputRequestedRegion();
-  void BeforeThreadedGenerateData();
-  void AfterThreadedGenerateData();
-  void ThreadedGenerateData(const RegionType& windowRegion, ThreadIdType threadId);
+  void ComputeRotationMatrix( MatrixType& R,  PointType& pt_sph );
 
-  void IntegrateBallVotingField( unsigned int threadId );
-  void OverlapRegion( OutputImagePointer A, OutputImagePointer B, RegionType& rA, RegionType& rB );
-  void ComputeVote( double saliency, unsigned int threadId, OutputImagePointer orientedVotingField );
-
-  virtual void ComputeRotationMatrix( MatrixType& R,  PointType& pt_sph ) = 0;
-
-  OutputVectorType m_VotingField;
-  VectorImagePointer m_SaliencyImage;
-
-  OutputImagePointer m_OutputImage;
-  OutputVectorType m_ThreadImage;
-  unsigned int m_ValidThreads;
 
 private:
-  ComposeVotesFromLookupImageFilter(const Self&); //purposely not implemented
+  ComposeVotesFromLookupImageFilter2D(const Self&); //purposely not implemented
   void operator=(const Self&); //purposely not implemented
 };
 
@@ -157,7 +104,7 @@ private:
 
 
 #ifndef ITK_MANUAL_INSTANTIATION
-#include "itkComposeVotesFromLookupImageFilter.txx"
+#include "itkComposeVotesFromLookupImageFilter2D.txx"
 #endif
 
-#endif /* __itkComposeVotesFromLookupImageFilter_h */
+#endif /* __itkComposeVotesFromLookupImageFilter2D_h */

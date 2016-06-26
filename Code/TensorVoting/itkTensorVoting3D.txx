@@ -120,6 +120,23 @@ TensorVoting3D< TInputImage >
 template< class TInputImage >
 void
 TensorVoting3D< TInputImage >
+::IntegrateVotes()
+{
+  // Fill orientation lookup image with lists of similarly oriented tokens
+  // Change ComposeVoteFilter to take a m_VotingField as input and m_Lookup image
+  ComposeVotesFilterPointer compose = ComposeVotesFilterType::New();
+  compose->SetInput( this->m_Lookup );
+  compose->SetVotingField( this->m_VotingField );
+  compose->SetSaliencyImage( this->m_SaliencyImage );
+  compose->SetOutputImage( this->m_Output );
+  compose->SetNumberOfThreads( this->GetNumberOfThreads() );
+  compose->Update();
+}
+
+
+template< class TInputImage >
+void
+TensorVoting3D< TInputImage >
 ::ComputeLookup()
 {
   RegionType region = this->GetInput()->GetLargestPossibleRegion();
@@ -132,7 +149,9 @@ TensorVoting3D< TInputImage >
     saliencyFilter->SetNumberOfThreads( this->GetNumberOfThreads() );
     saliencyFilter->Update();
     this->m_SaliencyImage = saliencyFilter->GetOutput();
+    this->m_SaliencyImage->DisconnectPipeline();
     this->m_EigenMatrixImage = saliencyFilter->GetEigenMatrix();
+    this->m_EigenMatrixImage->DisconnectPipeline();
   }
 
   CoordinateTransformPointer transform = CoordinateTransformType::New();
@@ -156,17 +175,16 @@ TensorVoting3D< TInputImage >
   tIt.GoToBegin();
   sIt.GoToBegin();
 
+  RandomGeneratorPointer rand = RandomGeneratorType::New();
+  rand->Initialize();
+
   while( !It.IsAtEnd() )
   {
     index = It.GetIndex();
     p = It.Get();
     eigenMatrix = eIt.Get();
     token = tIt.Get();
-
     saliency = sIt.Get();
-
-    RandomGeneratorPointer rand = RandomGeneratorType::New();
-    rand->Initialize();
 
     if ( ( saliency[0] > 0.001 ) && ( token ) )
     {
@@ -185,7 +203,7 @@ TensorVoting3D< TInputImage >
         if ( j == 1 ) u = eigenMatrix[0];
         if ( j == 2 ) u = eigenMatrix[2];
 
-        if ( u[0] < 0 )
+        if ( u[2] < 0 )
         {
           u = -u;
         }
@@ -196,6 +214,7 @@ TensorVoting3D< TInputImage >
         }
         pt_sph = transform->TransformCartesianToAzEl( pt_cart );
         this->m_Lookup->TransformPhysicalPointToIndex( pt_sph, index2 );
+
         IdType *ll = &( this->m_Lookup->GetPixel( index2 )[j] );
         ll->push_back( index );
       }

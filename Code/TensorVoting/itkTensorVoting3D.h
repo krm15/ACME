@@ -22,7 +22,7 @@
 #include "itkPlateFieldGenerator3D.h"
 #include "itkStickFieldGenerator3D.h"
 #include "itkTensorToSaliencyImageFilter.h"
-#include "itkComposeVotesFromLookupImageFilter.h"
+#include "itkComposeVotesFromLookupImageFilter3D.h"
 #include "itkThreadSafeMersenneTwisterRandomVariateGenerator.h"
 #include "itkBallFieldGenerator3D.h"
 #include <itkAzimuthElevationToCartesianTransform.h>
@@ -107,6 +107,10 @@ public:
   typedef VectorIndexSelectionCastImageFilter< VectorImageType, DoubleImageType > IndexFilterType;
   typedef ImageRegionIteratorWithIndex< DoubleImageType > DoubleIteratorType;
 
+  typedef ComposeVotesFromLookupImageFilter3D< InternalImageType >
+    ComposeVotesFilterType;
+  typedef typename ComposeVotesFilterType::Pointer ComposeVotesFilterPointer;
+
   typedef Statistics::ThreadSafeMersenneTwisterRandomVariateGenerator
     RandomGeneratorType;
   typedef typename RandomGeneratorType::Pointer RandomGeneratorPointer;
@@ -117,6 +121,7 @@ protected:
 
   void InitializeVotingFields();
   void ComputeLookup();
+  void IntegrateVotes();
 
 private:
   TensorVoting3D(const Self&); //purposely not implemented

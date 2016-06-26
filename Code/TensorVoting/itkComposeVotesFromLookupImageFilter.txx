@@ -107,8 +107,8 @@ ComposeVotesFromLookupImageFilter< TInputImage >
   addFilter->SetNumberOfThreads( this->GetNumberOfThreads() );
   addFilter->Update();
 
-  OutputIteratorType tIt( addFilter->GetOutput(), m_Output->GetLargestPossibleRegion() );
-  OutputIteratorType oIt( m_Output, m_Output->GetLargestPossibleRegion() );
+  OutputIteratorType tIt( addFilter->GetOutput(), m_OutputImage->GetLargestPossibleRegion() );
+  OutputIteratorType oIt( m_OutputImage, m_OutputImage->GetLargestPossibleRegion() );
   oIt.GoToBegin();
   tIt.GoToBegin();
   while( !tIt.IsAtEnd() )
@@ -211,22 +211,19 @@ ComposeVotesFromLookupImageFilter< TInputImage >
   ZeroTensor.Fill( 0 );
   
   m_ThreadImage[threadId] = OutputImageType::New();
-  m_ThreadImage[threadId]->SetRegions( m_Output->GetLargestPossibleRegion() );
-  m_ThreadImage[threadId]->CopyInformation( m_Output );
+  m_ThreadImage[threadId]->SetRegions( m_OutputImage->GetLargestPossibleRegion() );
+  m_ThreadImage[threadId]->CopyInformation( m_OutputImage );
   m_ThreadImage[threadId]->Allocate();
   m_ThreadImage[threadId]->FillBuffer( ZeroTensor );
   
   InputImageConstPointer input = this->GetInput();
 
   IntegrateBallVotingField( threadId );
-
-  CoordinateTransformPointer transform = CoordinateTransformType::New();
   
   IndexType index, index2;
-  VectorType u;
   double saliency;
   MatrixType R;
-  PointType pt_cart, pt_sph, origin, origin2;
+  PointType pt_sph, origin, origin2;
   IdType ll;
   OutputImagePointer orientedVotingField;
   double theta;
@@ -244,26 +241,14 @@ ComposeVotesFromLookupImageFilter< TInputImage >
         ll = iIt.Get()[j];
         if ( ll.size() > 0 )
         {
-         input->TransformIndexToPhysicalPoint( index2, pt_sph );
-#if ImageDimension == 3
-          pt_cart = transform->TransformAzElToCartesian( pt_sph );
-          for(unsigned int i = 0; i < ImageDimension; i++)
-          {
-            u[i] = pt_cart[i];
-          }
-          rMatrixHelper.ComputeRotationMatrix( u, R );
-#else
-          theta = pt_sph[0];
-          R[0][0] = vcl_cos( theta );
-          R[0][1] = -vcl_sin( theta );
-          R[1][0] = vcl_sin( theta );
-          R[1][1] = vcl_cos( theta );
-#endif
+          input->TransformIndexToPhysicalPoint( index2, pt_sph );
+          ComputeRotationMatrix( R, pt_sph );
+
           // Compute the rotated voting field
           OrientedTensorGeneratorPointer orientedTensor = OrientedTensorGeneratorType::New();
           orientedTensor->SetInput( m_VotingField[j] );
           orientedTensor->SetRotationMatrix( R );
-          orientedTensor->SetOutputSpacing( m_Output->GetSpacing() );
+          orientedTensor->SetOutputSpacing( m_OutputImage->GetSpacing() );
           orientedTensor->SetOutputRegion( m_VotingField[j]->GetLargestPossibleRegion() );
           orientedTensor->Update();
           orientedVotingField = orientedTensor->GetOutput();
@@ -277,10 +262,10 @@ ComposeVotesFromLookupImageFilter< TInputImage >
           {
             // Update the origin of the voting field
             index = *iter;
-            m_Output->TransformIndexToPhysicalPoint( index, pt_cart );
+            m_OutputImage->TransformIndexToPhysicalPoint( index, pt_sph );
             for( unsigned int i = 0; i < ImageDimension; i++ )
             {
-              origin2[i] = origin[i] + pt_cart[i];
+              origin2[i] = origin[i] + pt_sph[i];
             }
             orientedVotingField->SetOrigin( origin2 );
             saliency = m_SaliencyImage->GetPixel( index )[j];
@@ -318,7 +303,7 @@ ComposeVotesFromLookupImageFilter< TInputImage >
   OrientedTensorGeneratorPointer orientedTensor = OrientedTensorGeneratorType::New();
   orientedTensor->SetInput( m_VotingField[0] );
   orientedTensor->SetRotationMatrix( R );
-  orientedTensor->SetOutputSpacing( m_Output->GetSpacing() );
+  orientedTensor->SetOutputSpacing( m_OutputImage->GetSpacing() );
   orientedTensor->SetOutputRegion( m_VotingField[0]->GetLargestPossibleRegion() );
   orientedTensor->Update();
   OutputImagePointer orientedVotingField = orientedTensor->GetOutput();
@@ -341,7 +326,7 @@ ComposeVotesFromLookupImageFilter< TInputImage >
       {
         // Update the origin of the voting field
         index = *iter;
-        m_Output->TransformIndexToPhysicalPoint( index, pt_cart );
+        m_OutputImage->TransformIndexToPhysicalPoint( index, pt_cart );
         for( unsigned int i = 0; i < ImageDimension; i++ )
         {
           origin2[i] = origin[i] + pt_cart[i];

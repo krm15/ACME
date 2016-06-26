@@ -177,15 +177,7 @@ TensorVoting< TInputImage >
   ComputeLookup();
   std::cout << "Computing lookup finished" << std::endl;
 
-  // Fill orientation lookup image with lists of similarly oriented tokens
-  // Change ComposeVoteFilter to take a m_VotingField as input and m_Lookup image
-  ComposeVotesFilterPointer compose = ComposeVotesFilterType::New();
-  compose->SetInput( m_Lookup );
-  compose->SetVotingField( m_VotingField );
-  compose->SetSaliencyImage( m_SaliencyImage );
-  compose->SetOutputImage( m_Output );
-  compose->SetNumberOfThreads( this->GetNumberOfThreads() );
-  compose->Update();
+  IntegrateVotes();
   std::cout << "Integration completed" << std::endl;
 
   // Graft the output image

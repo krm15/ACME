@@ -111,6 +111,24 @@ TensorVoting2D< TInputImage >
 template< class TInputImage >
 void
 TensorVoting2D< TInputImage >
+::IntegrateVotes()
+{
+  // Fill orientation lookup image with lists of similarly oriented tokens
+  // Change ComposeVoteFilter to take a m_VotingField as input and m_Lookup image
+  ComposeVotesFilterPointer compose = ComposeVotesFilterType::New();
+  compose->SetInput( this->m_Lookup );
+  compose->SetVotingField( this->m_VotingField );
+  compose->SetSaliencyImage( this->m_SaliencyImage );
+  compose->SetOutputImage( this->m_Output );
+  compose->SetNumberOfThreads( this->GetNumberOfThreads() );
+  compose->Update();
+}
+
+
+
+template< class TInputImage >
+void
+TensorVoting2D< TInputImage >
 ::ComputeLookup()
 {
   RegionType region = this->GetInput()->GetLargestPossibleRegion();

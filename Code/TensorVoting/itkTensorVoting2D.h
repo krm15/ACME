@@ -21,7 +21,7 @@
 #include "itkBallFieldGenerator2D.h"
 #include "itkStickFieldGenerator2D.h"
 #include "itkTensorToSaliencyImageFilter.h"
-#include "itkComposeVotesFromLookupImageFilter.h"
+#include "itkComposeVotesFromLookupImageFilter2D.h"
 #include "itkThreadSafeMersenneTwisterRandomVariateGenerator.h"
 
 // #include "itkImageFileWriter.h"
@@ -98,6 +98,10 @@ public:
   typedef TensorToSaliencyImageFilter< InputImageType, VectorImageType >
     SaliencyFilterType;
 
+  typedef ComposeVotesFromLookupImageFilter2D< InternalImageType >
+    ComposeVotesFilterType;
+  typedef typename ComposeVotesFilterType::Pointer ComposeVotesFilterPointer;
+
   typedef Statistics::ThreadSafeMersenneTwisterRandomVariateGenerator
     RandomGeneratorType;
   typedef typename RandomGeneratorType::Pointer RandomGeneratorPointer;
@@ -108,6 +112,7 @@ protected:
 
   void InitializeVotingFields();
   void ComputeLookup();
+  void IntegrateVotes();
 
 private:
   TensorVoting2D(const Self&); //purposely not implemented

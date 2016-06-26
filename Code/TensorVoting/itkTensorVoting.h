@@ -49,7 +49,6 @@
 #include <vector>
 #include "itkVectorIndexSelectionCastImageFilter.h"
 #include "itkImageRegionIteratorWithIndex.h"
-#include "itkComposeVotesFromLookupImageFilter.h"
 #include "itkThreadSafeMersenneTwisterRandomVariateGenerator.h"
 
 // #include "itkImageFileWriter.h"
@@ -122,10 +121,6 @@ public:
   typedef VectorIndexSelectionCastImageFilter< VectorImageType, DoubleImageType > IndexFilterType;
   typedef ImageRegionIteratorWithIndex< DoubleImageType > DoubleIteratorType;
 
-  typedef ComposeVotesFromLookupImageFilter< InternalImageType >
-    ComposeVotesFilterType;
-  typedef typename ComposeVotesFilterType::Pointer ComposeVotesFilterPointer;
-
   itkSetMacro( Sigma, double );
   itkGetMacro( Sigma, double );
   itkSetMacro( UseSparseVoting, bool );
@@ -147,6 +142,7 @@ protected:
 
   virtual void InitializeVotingFields() = 0;
   virtual void ComputeLookup() = 0;
+  virtual void IntegrateVotes() = 0;
 
   double m_Sigma;
   bool m_UseSparseVoting;
