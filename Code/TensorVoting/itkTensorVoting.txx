@@ -54,12 +54,16 @@ TensorVoting<TInputImage >
 ::TensorVoting()
 {
   m_Sigma               = 5.0;
-  m_UseSparseVoting     = 0;
+  m_UseSparseVoting     = false;
+  m_LowMemoryFilter     = false;
   m_TokenImage          = ITK_NULLPTR;
   m_Lookup              = ITK_NULLPTR;
   m_SaliencyImage       = ITK_NULLPTR;
   m_EigenMatrixImage    = ITK_NULLPTR;
   m_Output              = ITK_NULLPTR;
+
+  this->m_EigenCalculator.SetDimension( ImageDimension );
+  this->m_EigenCalculator.SetOrderEigenValues( 1 );
 
   this->Superclass::SetNumberOfRequiredInputs ( 1 );
   this->Superclass::SetNumberOfRequiredOutputs ( 1 );
@@ -173,7 +177,8 @@ TensorVoting< TInputImage >
       m_TokenImage->FillBuffer( true );
   }
 
-  // Fill orientation lookup image with lists of similarly oriented voxels
+  // Fill orientation lookup image with lists of
+  // similarly oriented voxels
   ComputeLookup();
   std::cout << "Computing lookup finished" << std::endl;
 

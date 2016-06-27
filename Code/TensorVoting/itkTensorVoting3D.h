@@ -18,13 +18,12 @@
 #define __itkTensorVoting3D_h
 
 #include "itkTensorVoting.h"
+#include "itkThreadSafeMersenneTwisterRandomVariateGenerator.h"
 #include "itkBallFieldGenerator3D.h"
 #include "itkPlateFieldGenerator3D.h"
 #include "itkStickFieldGenerator3D.h"
 #include "itkTensorToSaliencyImageFilter.h"
 #include "itkComposeVotesFromLookupImageFilter3D.h"
-#include "itkThreadSafeMersenneTwisterRandomVariateGenerator.h"
-#include "itkBallFieldGenerator3D.h"
 #include <itkAzimuthElevationToCartesianTransform.h>
 
 // #include "itkImageFileWriter.h"

@@ -141,21 +141,8 @@ TensorVoting3D< TInputImage >
 {
   RegionType region = this->GetInput()->GetLargestPossibleRegion();
 
-  if  ( ( !this->m_EigenMatrixImage ) || ( !this->m_SaliencyImage ) )
-  {
-    typename SaliencyFilterType::Pointer saliencyFilter = SaliencyFilterType::New();
-    saliencyFilter->SetInput( this->GetInput() );
-    saliencyFilter->SetComputeEigenMatrix( 1 );
-    saliencyFilter->SetNumberOfThreads( this->GetNumberOfThreads() );
-    saliencyFilter->Update();
-    this->m_SaliencyImage = saliencyFilter->GetOutput();
-    this->m_SaliencyImage->DisconnectPipeline();
-    this->m_EigenMatrixImage = saliencyFilter->GetEigenMatrix();
-    this->m_EigenMatrixImage->DisconnectPipeline();
-  }
-
   CoordinateTransformPointer transform = CoordinateTransformType::New();
-    
+
   IndexType index, index2;
   PixelType p;
   VectorType u, saliency;
@@ -163,15 +150,40 @@ TensorVoting3D< TInputImage >
   PointType pt_cart, pt_sph;
   bool token;
 
+  if ( this->m_LowMemoryFilter )
+  {
+    saliency.Fill( 0.0 );
+
+    // Allocate saliency image
+    this->m_SaliencyImage = VectorImageType::New();
+    this->m_SaliencyImage->SetRegions( region );
+    this->m_SaliencyImage->CopyInformation( this->GetInput() );
+    this->m_SaliencyImage->Allocate();
+    this->m_SaliencyImage->FillBuffer( saliency );
+  }
+  else
+  {
+    if  ( ( !this->m_EigenMatrixImage ) || ( !this->m_SaliencyImage ) )
+    {
+      typename SaliencyFilterType::Pointer saliencyFilter = SaliencyFilterType::New();
+      saliencyFilter->SetInput( this->GetInput() );
+      saliencyFilter->SetComputeEigenMatrix( 1 );
+      saliencyFilter->SetNumberOfThreads( this->GetNumberOfThreads() );
+      saliencyFilter->Update();
+      this->m_SaliencyImage = saliencyFilter->GetOutput();
+      this->m_SaliencyImage->DisconnectPipeline();
+      this->m_EigenMatrixImage = saliencyFilter->GetEigenMatrix();
+      this->m_EigenMatrixImage->DisconnectPipeline();
+    }
+  }
+
   SizeType nSize = this->m_Lookup->GetLargestPossibleRegion().GetSize();
 
   // Compute an image of lists with similar pixel types
   ConstIteratorType   It( this->GetInput(), region );
-  IteratorType       eIt( this->m_EigenMatrixImage, region );
   TokenIteratorType  tIt( this->m_TokenImage, region );
   VectorIteratorType sIt( this->m_SaliencyImage, region );
   It.GoToBegin();
-  eIt.GoToBegin();
   tIt.GoToBegin();
   sIt.GoToBegin();
 
@@ -182,9 +194,25 @@ TensorVoting3D< TInputImage >
   {
     index = It.GetIndex();
     p = It.Get();
-    eigenMatrix = eIt.Get();
     token = tIt.Get();
-    saliency = sIt.Get();
+
+    if ( !this->m_LowMemoryFilter )
+    {
+      eigenMatrix = this->m_EigenMatrixImage->GetPixel( index );
+      saliency = sIt.Get();
+    }
+    else
+    {
+      // Compute saliency and eigenMatrix
+      this->m_EigenCalculator.ComputeEigenValuesAndVectors( p,
+        saliency, eigenMatrix );
+
+      for( unsigned int j = ImageDimension-1; j > 0; j-- )
+      {
+        saliency[j] = vcl_abs( saliency[j] - saliency[j-1] );
+      }
+      sIt.Set( saliency );
+    }
 
     if ( ( saliency[0] > 0.001 ) && ( token ) )
     {
@@ -200,8 +228,14 @@ TensorVoting3D< TInputImage >
     {
       if ( ( saliency[j] > 0.001 ) && ( token ) )
       {
-        if ( j == 1 ) u = eigenMatrix[0];
-        if ( j == 2 ) u = eigenMatrix[2];
+        if ( j == ImageDimension-1 )
+        {
+          u = eigenMatrix[ImageDimension-1];
+        }
+        else
+        {
+          u = eigenMatrix[0];
+        }
 
         if ( u[2] < 0 )
         {
@@ -222,7 +256,6 @@ TensorVoting3D< TInputImage >
 
     ++sIt;
     ++It;
-    ++eIt;
     ++tIt;
   }
 }

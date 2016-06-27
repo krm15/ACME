@@ -144,6 +144,7 @@ int main ( int argc, char* argv[] )
   TensorVotingFilterType::Pointer tensorVote = TensorVotingFilterType::New();
   tensorVote->SetInput( token );
   tensorVote->SetSigma( m_Sigma );
+//  tensorVote->SetLowMemoryFilter(true);
 //  tensorVote->SetStickSaliencyImage( planarity );
 //  tensorVote->SetEigenMatrixImage( eigen );
   tensorVote->SetUseSparseVoting( false );

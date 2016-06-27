@@ -50,6 +50,7 @@
 #include "itkVectorIndexSelectionCastImageFilter.h"
 #include "itkImageRegionIteratorWithIndex.h"
 #include "itkThreadSafeMersenneTwisterRandomVariateGenerator.h"
+#include "itkSymmetricEigenAnalysis.h"
 
 // #include "itkImageFileWriter.h"
 
@@ -121,10 +122,15 @@ public:
   typedef VectorIndexSelectionCastImageFilter< VectorImageType, DoubleImageType > IndexFilterType;
   typedef ImageRegionIteratorWithIndex< DoubleImageType > DoubleIteratorType;
 
+  typedef SymmetricEigenAnalysis< MatrixType, VectorType, MatrixType >
+    EigenCalculatorType;
+
   itkSetMacro( Sigma, double );
   itkGetMacro( Sigma, double );
   itkSetMacro( UseSparseVoting, bool );
   itkGetMacro( UseSparseVoting, bool );
+  itkSetMacro( LowMemoryFilter, bool );
+  itkGetMacro( LowMemoryFilter, bool );
 
   itkSetObjectMacro( TokenImage, TokenImageType );
   itkSetObjectMacro( SaliencyImage, VectorImageType );
@@ -146,6 +152,7 @@ protected:
 
   double m_Sigma;
   bool m_UseSparseVoting;
+  bool m_LowMemoryFilter;
   RegionType m_Region;
 
   TokenImagePointer m_TokenImage;
@@ -154,6 +161,7 @@ protected:
   InputImagePointer m_EigenMatrixImage;
   InputImagePointer m_Output;
   std::vector< InputImagePointer > m_VotingField;
+  EigenCalculatorType m_EigenCalculator;
 
 private:
   TensorVoting(const Self&); //purposely not implemented
