@@ -34,7 +34,7 @@ int main(int argc, char* argv [] )
 
   // Define the dimension of the images
   const unsigned int    Dimension = 3;
-  typedef unsigned char InputPixelType;
+  typedef unsigned short InputPixelType;
   typedef double        OutputPixelType;
 
   // Declare the types of the images

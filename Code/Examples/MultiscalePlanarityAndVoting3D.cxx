@@ -35,14 +35,14 @@ int main(int argc, char* argv [] )
   if ( argc < 4 )
     {
     std::cerr << "Usage: " << std::endl;
-    std::cerr << argv[0] << " iInputImage oSaliencyImage iSigmaFiltering iSigmaVoting <NumberOfThreads>" << std::endl;
+    std::cerr << argv[0] << " iInputImage oSaliencyImage iSigmaFiltering iSigmaVoting <NumberOfThreads> ";
+    std::cerr << "<alpha> <beta> <gamma>" << std::endl;
     return EXIT_FAILURE;
     }
 
-
   // Define the dimension of the images
   const unsigned int    Dimension = 3;
-  typedef unsigned char InputPixelType;
+  typedef unsigned short InputPixelType;
   typedef double        InternalPixelType;
 
   // Declare the types of the images
@@ -69,6 +69,24 @@ int main(int argc, char* argv [] )
   typedef itk::ImageFileWriter< InputImageType > WriterType;
 
 
+  double m_Alpha = 0.5;
+  double m_Beta  = 0.5;
+  double m_Gamma = 8.0;
+
+  unsigned int NumberOfThreads = 24;
+  if ( argc > 5 )
+  {
+    NumberOfThreads = atoi( argv[5] );
+  }
+
+  if ( argc > 6 )
+  {
+    m_Alpha = atof( argv[6] );
+    m_Beta = atof( argv[7] );
+    m_Gamma = atof( argv[8] );
+  }
+
+
   ImageReaderType::Pointer reader = ImageReaderType::New();
   reader->SetFileName ( argv[1] );
   reader->Update();
@@ -82,7 +100,9 @@ int main(int argc, char* argv [] )
   MultiscalePlateFilter->SetSigmaMin( atof(argv[3])  );
   MultiscalePlateFilter->SetSigmaMax( atof(argv[3]) );
   MultiscalePlateFilter->SetNumberOfSigmaSteps( 1 );
-
+  MultiscalePlateFilter->SetAlpha( m_Alpha );
+  MultiscalePlateFilter->SetBeta( m_Beta );
+  MultiscalePlateFilter->SetGamma( m_Gamma );
   try
     {
     MultiscalePlateFilter->Update();
@@ -129,9 +149,7 @@ int main(int argc, char* argv [] )
   }
   std::cout << "Filled token image..." << std::endl;
 
-  unsigned int NumberOfThreads = 24;
-  if ( argc > 4 )
-    NumberOfThreads = atoi( argv[5] );
+
 
   // Measure time taken
   itk::TimeProbe cputimer;
@@ -141,7 +159,7 @@ int main(int argc, char* argv [] )
   TensorVotingFilterType::Pointer tensorVote = TensorVotingFilterType::New();
   tensorVote->SetInput( token );
   tensorVote->SetSigma( atof( argv[4] ) );
-//  tensorVote->SetStickSaliencyImage( planarity );
+//  tensorVote->SetSaliencyImage( planarity );
 //  tensorVote->SetEigenMatrixImage( eigen );
   tensorVote->SetUseSparseVoting( false );
   tensorVote->SetNumberOfThreads( NumberOfThreads );
