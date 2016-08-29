@@ -55,7 +55,7 @@ int main ( int argc, char* argv[] )
     }
 
   const unsigned int Dimension = 3;
-  typedef unsigned short PixelType;
+  typedef unsigned char PixelType;
   typedef itk::Image< PixelType, Dimension > InputImageType;
   typedef itk::ImageFileReader< InputImageType > ReaderType;
   typedef itk::ImageFileWriter< InputImageType > WriterType;

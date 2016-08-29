@@ -86,11 +86,13 @@ int main ( int argc, char* argv[] )
   FeatureReaderType::Pointer raw = FeatureReaderType::New();
   raw->SetFileName ( argv[1] );
   raw->Update();
+  std::cout << "Read input image" << std::endl;
 
   // Tensor saliency image
   FeatureReaderType::Pointer sreader = FeatureReaderType::New();
   sreader->SetFileName ( argv[2] );
   sreader->Update();
+  std::cout << "Read tensor image" << std::endl;
 
   SegmentImageType::Pointer m_ForegroundImg = SegmentImageType::New();
   m_ForegroundImg->CopyInformation( sreader->GetOutput() );

@@ -36,7 +36,7 @@ int main(int argc, char* argv [] )
     {
     std::cerr << "Usage: " << std::endl;
     std::cerr << argv[0] << " iInputImage oSaliencyImage iSigmaFiltering iSigmaVoting <NumberOfThreads> ";
-    std::cerr << "<alpha> <beta> <gamma>" << std::endl;
+    std::cerr << "<alpha> <beta> <gamma> <saliencyid>" << std::endl;
     return EXIT_FAILURE;
     }
 
@@ -72,6 +72,7 @@ int main(int argc, char* argv [] )
   double m_Alpha = 0.5;
   double m_Beta  = 0.5;
   double m_Gamma = 8.0;
+  unsigned int saliencyId = 2;
 
   unsigned int NumberOfThreads = 24;
   if ( argc > 5 )
@@ -84,6 +85,11 @@ int main(int argc, char* argv [] )
     m_Alpha = atof( argv[6] );
     m_Beta = atof( argv[7] );
     m_Gamma = atof( argv[8] );
+  }
+
+  if ( argc > 9 )
+  {
+    saliencyId = atoi( argv[9] );
   }
 
 
@@ -187,7 +193,7 @@ int main(int argc, char* argv [] )
 
   IndexFilterType::Pointer componentExtractor = IndexFilterType::New();
   componentExtractor->SetInput( saliency->GetOutput() );
-  componentExtractor->SetIndex( 2 );
+  componentExtractor->SetIndex( saliencyId );
   std::cout << "Saliency complete..." << std::endl;
 
   RescaleFilterType::Pointer rescale = RescaleFilterType::New();
