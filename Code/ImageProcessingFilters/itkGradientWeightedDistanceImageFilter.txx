@@ -50,9 +50,11 @@ template< class TFeatureImage,class TInputImage,class TSegmentImage >
 GradientWeightedDistanceImageFilter< TFeatureImage, TInputImage, TSegmentImage >
 ::GradientWeightedDistanceImageFilter()
 {
-  m_LargestCellRadius = 8.0;
+  m_UseLevelSet = true;
+  m_LargestCellRadius = 5.0;
   m_NucleiSigma = 0.4;
   m_Alpha = 1;
+  m_Beta = 0.0;
 
   m_ForegroundMap = NULL;
   m_DistanceMap = NULL;
@@ -75,20 +77,35 @@ GradientWeightedDistanceImageFilter< TFeatureImage, TInputImage, TSegmentImage >
   m_Maurer->SetUseImageSpacing ( 1 );
   m_Maurer->SetInsideIsPositive ( 0 );
   m_Maurer->Update();
-  ImagePointer image = m_Maurer->GetOutput();
-  image->DisconnectPipeline();
+
+  ImagePointer image;
+  if ( m_UseLevelSet )
+    {
+    // Nuclei only
+    AbsFilterPointer  m_absFilter = AbsFilterType::New();
+    m_absFilter->SetInput ( m_Maurer->GetOutput() );
+    m_absFilter->Update();
+    image = m_absFilter->GetOutput();
+    image->DisconnectPipeline();
+    }
+  else
+    {
+      // Membranes only
+      image = m_Maurer->GetOutput();
+      image->DisconnectPipeline();
+    }
 
   IteratorType It( image, image->GetLargestPossibleRegion() );
   It.GoToBegin();
   while( !It.IsAtEnd() )
     {
-    // Set pixels on or outside the membrane to 0
-    if ( It.Get() < 0 )
+    // Set pixels on or inside the membrane to 0
+    if ( ( !m_UseLevelSet ) && ( It.Get() < 0 ) )
       {
       It.Set( 0 );
       }
 
-    if ( It.Get() > m_LargestCellRadius )
+    if ( vcl_abs( It.Get() ) > m_LargestCellRadius )
       {
       It.Set( m_LargestCellRadius );
       }
@@ -107,11 +124,32 @@ GenerateData()
 
   ImagePointer outputImg;
 
-  outputImg = ImageType::New();
-  outputImg->CopyInformation( this->GetInput() );
-  outputImg->SetRegions( this->GetInput()->GetLargestPossibleRegion() );
-  outputImg->Allocate();
-  outputImg->FillBuffer( 1.0 );
+  if ( m_Beta > 0 )
+  {
+    MultiScaleLoGFilterPointer log = MultiScaleLoGFilterType::New();
+    log->SetInput( this->GetInput () );
+    log->SetSigmaMin( 0.4  );
+    log->SetSigmaMax( 2.0 );
+    log->SetNumberOfSigmaSteps( 5 );
+    log->Update();
+
+    RescaleFilterPointer rescale = RescaleFilterType::New();
+    rescale->SetInput( log->GetOutput() );
+    rescale->SetOutputMinimum( 0 );
+    rescale->SetOutputMaximum( 1 );
+    rescale->Update();
+
+    outputImg = rescale->GetOutput();
+    outputImg->DisconnectPipeline();
+  }
+  else
+  {
+    outputImg = ImageType::New();
+    outputImg->CopyInformation( this->GetInput() );
+    outputImg->SetRegions( this->GetInput()->GetLargestPossibleRegion() );
+    outputImg->Allocate();
+    outputImg->FillBuffer( 1.0 );
+  }
 
   double gmax, gmin;
 
@@ -149,15 +187,16 @@ GenerateData()
   IteratorType gIt ( m_Gradient,
                      m_Gradient->GetLargestPossibleRegion() );
 
-  double p;
+  double p, q;
   gIt.GoToBegin();
   dIt.GoToBegin();
   It.GoToBegin();
   while ( !It.IsAtEnd() )
     {
     p = vcl_exp( m_Alpha * (gmax - static_cast<double>(gIt.Get()) )/ ( gmax - gmin ) );
+    q = vcl_exp( - m_Beta * static_cast<double>( It.Get() ) );
 
-    It.Set ( dIt.Get() * p );
+    It.Set ( dIt.Get() * p * q );
 
     ++gIt;
     ++dIt;
@@ -173,9 +212,8 @@ GradientWeightedDistanceImageFilter< TFeatureImage, TInputImage, TSegmentImage >
 PrintSelf ( std::ostream& os, Indent indent ) const
 {
   Superclass::PrintSelf ( os,indent );
-  os << indent << "Class Name:              " << this->GetNameOfClass( ) <<
-    std::endl;
-  os << indent << "Use LevelSet:              " << m_UseLevelSet << std::endl;
+  os << indent << "Class Name:   " << this->GetNameOfClass( ) << std::endl;
+  os << indent << "Use LevelSet: " << m_UseLevelSet << std::endl;
 }
 
 } /* end namespace itk */

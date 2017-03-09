@@ -39,7 +39,7 @@ SET( DIRECTORIES
   CellPreprocess
   PlanarityFilter
   TensorVoting
-  WatershedImageFilter
+  ImageProcessingFilters
   Examples
 )
 

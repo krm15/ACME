@@ -54,6 +54,7 @@
 #include "itkSigmoidImageFilter.h"
 #include "itkImageRegionIteratorWithIndex.h"
 #include "itkSignedMaurerDistanceMapImageFilter.h"
+#include "itkMultiScaleLoGImageFilter.h"
 #include "itkRescaleIntensityImageFilter.h"
 #include "itkAbsImageFilter.h"
 #include "itkThresholdImageFilter.h"
@@ -119,6 +120,9 @@ class ITK_EXPORT GradientWeightedDistanceImageFilter :
     typedef typename SegmentImageType::IndexType    SegmentImageIndexType;
     typedef typename SegmentImageType::PixelType    SegmentImagePixelType;
 
+    typedef MultiScaleLoGImageFilter< FeatureImageType, ImageType >
+      MultiScaleLoGFilterType;
+    typedef typename MultiScaleLoGFilterType::Pointer MultiScaleLoGFilterPointer;
     typedef RescaleIntensityImageFilter< ImageType, ImageType>
       RescaleFilterType;
     typedef typename RescaleFilterType::Pointer RescaleFilterPointer;
@@ -151,6 +155,8 @@ class ITK_EXPORT GradientWeightedDistanceImageFilter :
     itkSetMacro (      NucleiSigma,      double );
     itkGetConstMacro ( Alpha,            double );
     itkSetMacro (      Alpha,            double );
+    itkGetConstMacro ( Beta,             double );
+    itkSetMacro (      Beta,             double );
 
     void SetForeground ( SegmentImagePointer fg )
     {
@@ -178,6 +184,7 @@ class ITK_EXPORT GradientWeightedDistanceImageFilter :
     double m_LargestCellRadius;
     double m_NucleiSigma;
     double m_Alpha;
+    double m_Beta;
 
     SegmentImagePointer m_ForegroundMap;
     ImagePointer m_DistanceMap;

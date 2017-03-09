@@ -7,8 +7,8 @@ INCLUDE_DIRECTORIES( BEFORE
   ${ACME_BINARY_DIR}/TensorVoting
   ${ACME_SOURCE_DIR}/ConfocalImageGenerator
   ${ACME_BINARY_DIR}/ConfocalImageGenerator
-  ${ACME_SOURCE_DIR}/WatershedImageFilter
-  ${ACME_BINARY_DIR}/WatershedImageFilter
+  ${ACME_SOURCE_DIR}/ImageProcessingFilters
+  ${ACME_BINARY_DIR}/ImageProcessingFilters
 )
 
 ADD_EXECUTABLE(cellPreprocess CellPreprocess.cxx)
@@ -38,6 +38,9 @@ TARGET_LINK_LIBRARIES(multiscalePlanarityAndVoting3D ${ITK_LIBRARIES} Random)
 ADD_EXECUTABLE( membraneSegmentation MembraneSegmentationImageFilter.cxx)
 TARGET_LINK_LIBRARIES( membraneSegmentation ${ITK_LIBRARIES})
 
+ADD_EXECUTABLE( membraneSegmentationWithMarkers MembraneSegmentationWithMarkersImageFilter.cxx)
+TARGET_LINK_LIBRARIES( membraneSegmentationWithMarkers ${ITK_LIBRARIES})
+
 ADD_EXECUTABLE(cvtGenerator CVTGenerator.cxx)
 TARGET_LINK_LIBRARIES(cvtGenerator ${ITK_LIBRARIES} Random )
 
@@ -48,3 +51,16 @@ TARGET_LINK_LIBRARIES(membraneSegmentationEvaluation ${ITK_LIBRARIES} Random)
 # For computing the tables in the paper
 ADD_EXECUTABLE(labelMapOverlapMeasures LabelMapOverlapMeasures.cxx)
 TARGET_LINK_LIBRARIES(labelMapOverlapMeasures ${ITK_LIBRARIES} )
+
+ADD_EXECUTABLE( MorphologicalErosionOnLabelImageFilter MorphologicalErosionOnLabelImageFilter.cxx )
+TARGET_LINK_LIBRARIES( MorphologicalErosionOnLabelImageFilter ${ITK_LIBRARIES} )
+
+ADD_EXECUTABLE(cellSegmentationStatistics CellSegmentationStatistics.cxx )
+TARGET_LINK_LIBRARIES(cellSegmentationStatistics ${ITK_LIBRARIES})
+
+ADD_EXECUTABLE( DistanceFromMask DistanceFromMask.cxx )
+TARGET_LINK_LIBRARIES( DistanceFromMask ${ITK_LIBRARIES} )
+
+ADD_EXECUTABLE(sizeThresh SizeThreshold.cxx )
+TARGET_LINK_LIBRARIES(sizeThresh ${ITK_LIBRARIES} )
+
