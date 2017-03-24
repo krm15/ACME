@@ -60,7 +60,6 @@ int main(int argc, char**argv)
   typedef itk::Image< PixelType, Dimension > ImageType;
   typedef itk::Image< float, Dimension > InputImageType;
   typedef itk::ImageFileReader< ImageType > ReaderType;
-  typedef itk::BinarySizeThresholdImageFilter< ImageType, ImageType > SizeThresholdFilterType;
   typedef itk::ImageFileWriter< ImageType > WriterType;
   typedef itk::BinaryThresholdImageFilter< ImageType, ImageType  > BinaryThresholdFilterType;
 
