@@ -1,0 +1,5 @@
+ADD_EXECUTABLE( membraneSegmentation MembraneSegmentationImageFilter.cxx)
+TARGET_LINK_LIBRARIES( membraneSegmentation ${ITK_LIBRARIES})
+
+ADD_EXECUTABLE( membraneSegmentationWithMarkers MembraneSegmentationWithMarkersImageFilter.cxx)
+TARGET_LINK_LIBRARIES( membraneSegmentationWithMarkers ${ITK_LIBRARIES})
