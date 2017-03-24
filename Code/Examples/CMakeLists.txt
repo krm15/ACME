@@ -14,6 +14,9 @@ INCLUDE_DIRECTORIES( BEFORE
 ADD_EXECUTABLE(cellPreprocess CellPreprocess.cxx)
 TARGET_LINK_LIBRARIES(cellPreprocess ${ITK_LIBRARIES})
 
+ADD_EXECUTABLE(intensityThreshold IntensityThreshold.cxx )
+TARGET_LINK_LIBRARIES(intensityThreshold ${ITK_LIBRARIES})
+
 ADD_EXECUTABLE(resample Resample.cxx)
 TARGET_LINK_LIBRARIES(resample ${ITK_LIBRARIES})
 
